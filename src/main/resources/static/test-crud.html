@@ -8,12 +8,14 @@
     <style>
         body { padding: 20px; background-color: #f8f9fa; }
         .hidden { display: none !important; }
+        .product-img-thumbnail { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+        .card-img-top { height: 200px; object-fit: cover; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 class="mb-4 text-center">Hệ Thống Thảm Bê Tông (GCCM)</h2>
+    <h2 class="mb-4 text-center">Công Ty TNHH Thảm Bê Tông Việt Nam</h2>
 
     <!-- Vùng Đăng nhập -->
     <div id="loginSection" class="card p-4 mb-4 mx-auto shadow-sm" style="max-width: 400px;">
@@ -30,19 +32,63 @@
         <button class="btn btn-danger shadow-sm" onclick="logout()">Đăng xuất</button>
     </div>
 
-    <!-- GIAO DIỆN ADMIN -->
+    <!-- ================== GIAO DIỆN ADMIN ================== -->
     <div id="adminSection" class="hidden">
-        <h4>Trang Quản Trị Viên</h4>
-        <table class="table table-bordered bg-white mt-3 shadow-sm">
+        <h4 class="mb-4">Trang Quản Trị Viên</h4>
+
+        <!-- Khu vực Thông báo Đơn hàng mới -->
+        <div class="card border-warning mb-4 shadow-sm">
+            <div class="card-header bg-warning text-dark fw-bold">
+                Thông báo yêu cầu đặt hàng mới
+            </div>
+            <ul class="list-group list-group-flush" id="notificationList">
+                <li class="list-group-item text-muted">Không có thông báo mới.</li>
+            </ul>
+        </div>
+
+        <!-- Form Thêm Mới Nhanh -->
+        <div class="card p-3 mb-4 shadow-sm">
+            <h5>Thêm Sản Phẩm Mới</h5>
+            <div class="row g-2">
+                <div class="col-md-4"><input type="text" id="name" class="form-control" placeholder="Tên sản phẩm"></div>
+                <div class="col-md-2"><input type="number" id="thickness" class="form-control" placeholder="Độ dày (mm)"></div>
+                <div class="col-md-2"><input type="number" id="weight" class="form-control" placeholder="Cân nặng (kg/m2)"></div>
+                <div class="col-md-2"><input type="number" id="width" class="form-control" placeholder="Khổ rộng (m)"></div>
+                <div class="col-md-2"><input type="number" id="length" class="form-control" placeholder="Khổ dài (m)"></div>
+                <div class="col-md-3"><input type="number" id="price" class="form-control" placeholder="Giá bán / m2"></div>
+                <div class="col-md-3"><input type="number" id="stock" class="form-control" placeholder="Tồn kho (m2)"></div>
+                <div class="col-md-4"><input type="text" id="desc" class="form-control" placeholder="Mô tả"></div>
+                <div class="col-md-2">
+                    <select id="status" class="form-select">
+                        <option value="1">Đang bán</option>
+                        <option value="0">Ngừng bán</option>
+                    </select>
+                </div>
+                <!-- Dòng input file thêm ảnh mới -->
+                <div class="col-md-12 mt-2">
+                    <label class="form-label fw-bold">Ảnh sản phẩm (Tùy chọn):</label>
+                    <input type="file" id="imageFile" class="form-control" accept="image/*">
+                </div>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-success" onclick="createProduct()">Thêm Mới</button>
+                <button class="btn btn-secondary" onclick="resetForm()">Làm mới Form</button>
+            </div>
+        </div>
+
+        <!-- Bảng Dữ liệu Sản Phẩm -->
+        <table class="table table-bordered table-hover bg-white shadow-sm align-middle">
             <thead class="table-dark">
-            <tr><th>ID</th><th>Tên SP</th><th>Giá bán</th><th>Trạng thái</th></tr>
+            <tr>
+                <th>Ảnh</th><th>Tên SP</th><th>Quy cách (Dày/Nặng)</th><th>Khổ (Rộng/Dài)</th>
+                <th>Giá bán</th><th>Tồn kho</th><th>Trạng thái</th><th>Thao tác</th>
+            </tr>
             </thead>
             <tbody id="adminTableBody"></tbody>
         </table>
-        <!-- Các Modal Thêm/Sửa Admin (Có thể mở rộng sau dựa trên code cũ) -->
     </div>
 
-    <!-- GIAO DIỆN KHÁCH HÀNG (ĐẶT HÀNG) -->
+    <!-- ================== GIAO DIỆN KHÁCH HÀNG ================== -->
     <div id="customerSection" class="hidden">
         <h4>Danh sách Sản phẩm</h4>
         <div class="row" id="productStore"></div>
@@ -58,7 +104,72 @@
     </div>
 </div>
 
-<!-- Modal Đăng Ký Tài Khoản -->
+<!-- ================== MODAL SỬA SẢN PHẨM (ADMIN) ================== -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sửa Thông Tin Sản Phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editProdId">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Tên sản phẩm</label>
+                        <input type="text" id="editName" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Độ dày (mm)</label>
+                        <input type="number" id="editThickness" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Cân nặng (kg/m2)</label>
+                        <input type="number" id="editWeight" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Khổ rộng (m)</label>
+                        <input type="number" id="editWidth" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Khổ dài (m)</label>
+                        <input type="number" id="editLength" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Giá bán (VNĐ/m2)</label>
+                        <input type="number" id="editPrice" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tồn kho (m2)</label>
+                        <input type="number" id="editStock" class="form-control">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Mô tả</label>
+                        <input type="text" id="editDesc" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Trạng thái</label>
+                        <select id="editStatus" class="form-select">
+                            <option value="1">Đang bán</option>
+                            <option value="0">Ngừng bán</option>
+                        </select>
+                    </div>
+                    <!-- Input file sửa ảnh -->
+                    <div class="col-md-12">
+                        <label class="form-label text-primary">Cập nhật ảnh mới (Bỏ trống nếu giữ ảnh cũ)</label>
+                        <input type="file" id="editImageFile" class="form-control" accept="image/*">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="updateProduct()">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================== MODAL ĐĂNG KÝ ================== -->
 <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -97,13 +208,16 @@
 </div>
 
 <script>
-    const API_BASE = "http://localhost:8080/api";
+    const API_BASE = "http://localhost:8080/api/v1";
     let jwtToken = localStorage.getItem("jwtToken");
     let currentRole = localStorage.getItem("role");
+
     let registerModalObj = null;
+    let editModalObj = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         registerModalObj = new bootstrap.Modal(document.getElementById('registerModal'));
+        editModalObj = new bootstrap.Modal(document.getElementById('editModal'));
         if (jwtToken && currentRole) {
             routeUser(currentRole);
         }
@@ -155,7 +269,6 @@
         if (res.ok) {
             alert("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
             registerModalObj.hide();
-            // Điền sẵn username vừa đăng ký vào ô đăng nhập cho tiện
             document.getElementById('username').value = payload.username;
             document.getElementById('password').value = "";
         } else {
@@ -171,6 +284,7 @@
         if (role === 'ROLE_ADMIN') {
             document.getElementById('adminSection').classList.remove('hidden');
             loadAdminProducts();
+            loadNotifications();
         } else if (role === 'ROLE_CUSTOMER') {
             document.getElementById('customerSection').classList.remove('hidden');
             loadCustomerProducts();
@@ -182,27 +296,196 @@
         location.reload();
     }
 
-    function getAuthHeaders() {
-        return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwtToken };
+    // ================= LOGIC ADMIN =================
+    async function loadAdminProducts() {
+        const res = await fetch(`${API_BASE}/admin/products`, {
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        const products = await res.json();
+
+        const tbody = document.getElementById('adminTableBody');
+        tbody.innerHTML = "";
+        products.forEach(p => {
+            const pStr = encodeURIComponent(JSON.stringify(p));
+            const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="product-img-thumbnail">` : '<span class="badge bg-secondary">No img</span>';
+            tbody.innerHTML += `
+                <tr>
+                    <td>${imgHtml}</td>
+                    <td class="fw-bold">${p.name}</td>
+                    <td>${p.thicknessMm}mm - ${p.weightKgM2}kg/m²</td>
+                    <td>${p.widthM}m x ${p.lengthM}m</td>
+                    <td class="text-danger">${p.unitPrice.toLocaleString('vi-VN')} đ</td>
+                    <td>${p.stockQuantityM2} m²</td>
+                    <td>${p.status === 1 ? '<span class="badge bg-success">Đang bán</span>' : '<span class="badge bg-danger">Ngừng bán</span>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="openEditModal('${pStr}')">Sửa</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Xóa</button>
+                    </td>
+                </tr>`;
+        });
     }
 
-    // --- LOGIC CUSTOMER ---
+    async function loadNotifications() {
+        try {
+            const res = await fetch(`${API_BASE}/admin/products/notifications`, { headers: { 'Authorization': 'Bearer ' + jwtToken } });
+            const notifs = await res.json();
+            const list = document.getElementById('notificationList');
+            if(notifs.length > 0) {
+                list.innerHTML = "";
+                notifs.forEach(n => {
+                    list.innerHTML += `<li class="list-group-item"><strong>${n.title}</strong>: ${n.content} <br><small class="text-muted">${n.createdAt}</small></li>`;
+                });
+            }
+        } catch (e) {
+            console.log("Không thể tải thông báo");
+        }
+    }
+
+    async function createProduct() {
+        const productData = {
+            name: document.getElementById('name').value,
+            thicknessMm: document.getElementById('thickness').value ? parseInt(document.getElementById('thickness').value) : null,
+            weightKgM2: document.getElementById('weight').value ? parseFloat(document.getElementById('weight').value) : null,
+            widthM: document.getElementById('width').value ? parseFloat(document.getElementById('width').value) : null,
+            lengthM: document.getElementById('length').value ? parseFloat(document.getElementById('length').value) : null,
+            unitPrice: document.getElementById('price').value ? parseFloat(document.getElementById('price').value) : null,
+            stockQuantityM2: document.getElementById('stock').value ? parseFloat(document.getElementById('stock').value) : null,
+            description: document.getElementById('desc').value,
+            status: parseInt(document.getElementById('status').value)
+        };
+
+        const formData = new FormData();
+        // Ép kiểu JSON thành Blob để Spring Boot @RequestPart hiểu được
+        formData.append("product", new Blob([JSON.stringify(productData)], { type: "application/json" }));
+
+        const imageInput = document.getElementById('imageFile');
+        if (imageInput.files.length > 0) {
+            formData.append("image", imageInput.files[0]);
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/admin/products`, {
+                method: 'POST',
+                // QUAN TRỌNG NHẤT: KHÔNG để Content-Type ở đây. Chỉ truyền mỗi Authorization Token.
+                headers: {
+                    'Authorization': 'Bearer ' + jwtToken
+                },
+                body: formData
+            });
+
+            if (res.ok) {
+                resetForm();
+                loadAdminProducts();
+                alert("Thêm mới thành công!");
+            } else {
+                const text = await res.text();
+                alert("Lỗi khi thêm sản phẩm: " + text);
+                console.error("Server response:", text);
+            }
+        } catch (error) {
+            console.error("Network error:", error);
+            alert("Lỗi mạng khi gọi API.");
+        }
+    }
+
+    function openEditModal(encodedProduct) {
+        const p = JSON.parse(decodeURIComponent(encodedProduct));
+        document.getElementById('editProdId').value = p.id;
+        document.getElementById('editName').value = p.name;
+        document.getElementById('editThickness').value = p.thicknessMm;
+        document.getElementById('editWeight').value = p.weightKgM2;
+        document.getElementById('editWidth').value = p.widthM;
+        document.getElementById('editLength').value = p.lengthM;
+        document.getElementById('editPrice').value = p.unitPrice;
+        document.getElementById('editStock').value = p.stockQuantityM2;
+        document.getElementById('editDesc').value = p.description;
+        document.getElementById('editStatus').value = p.status;
+        document.getElementById('editImageFile').value = ""; // Xóa input file ảnh
+        editModalObj.show();
+    }
+
+    async function updateProduct() {
+        const id = document.getElementById('editProdId').value;
+        const productData = {
+            name: document.getElementById('editName').value,
+            thicknessMm: document.getElementById('editThickness').value ? parseInt(document.getElementById('editThickness').value) : null,
+            weightKgM2: document.getElementById('editWeight').value ? parseFloat(document.getElementById('editWeight').value) : null,
+            widthM: document.getElementById('editWidth').value ? parseFloat(document.getElementById('editWidth').value) : null,
+            lengthM: document.getElementById('editLength').value ? parseFloat(document.getElementById('editLength').value) : null,
+            unitPrice: document.getElementById('editPrice').value ? parseFloat(document.getElementById('editPrice').value) : null,
+            stockQuantityM2: document.getElementById('editStock').value ? parseFloat(document.getElementById('editStock').value) : null,
+            description: document.getElementById('editDesc').value,
+            status: parseInt(document.getElementById('editStatus').value)
+        };
+
+        const formData = new FormData();
+        formData.append("product", new Blob([JSON.stringify(productData)], { type: "application/json" }));
+
+        const imageInput = document.getElementById('editImageFile');
+        if (imageInput.files.length > 0) {
+            formData.append("image", imageInput.files[0]);
+        }
+
+        const res = await fetch(`${API_BASE}/admin/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + jwtToken },
+            body: formData
+        });
+
+        if (res.ok) {
+            editModalObj.hide();
+            loadAdminProducts();
+            alert("Cập nhật thành công!");
+        }
+    }
+
+    async function deleteProduct(id) {
+        if (!confirm("Chuyển sản phẩm sang trạng thái ngừng bán?")) return;
+        const res = await fetch(`${API_BASE}/admin/products/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + jwtToken } });
+        if (res.ok) loadAdminProducts();
+    }
+
+    function resetForm() {
+        document.getElementById('name').value = "";
+        document.getElementById('thickness').value = "";
+        document.getElementById('weight').value = "";
+        document.getElementById('width').value = "";
+        document.getElementById('length').value = "";
+        document.getElementById('price').value = "";
+        document.getElementById('stock').value = "";
+        document.getElementById('desc').value = "";
+        document.getElementById('status').value = "1";
+    }
+
+    // ================= LOGIC CUSTOMER =================
     let storeProducts = [];
 
     async function loadCustomerProducts() {
-        const res = await fetch(`${API_BASE}/admin/products`, { headers: getAuthHeaders() });
+        const res = await fetch(`${API_BASE}/public/products`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
         storeProducts = await res.json();
 
         const store = document.getElementById('productStore');
         store.innerHTML = "";
         storeProducts.filter(p => p.status === 1).forEach(p => {
+            const imgSrc = p.imageUrl ? p.imageUrl : 'https://via.placeholder.com/300x200?text=Chua+Co+Anh';
             store.innerHTML += `
                 <div class="col-md-4 mb-3">
-                    <div class="card h-100 shadow-sm">
+                    <div class="card h-100 shadow-sm border-0 bg-white">
+                        <img src="${imgSrc}" class="card-img-top" alt="Sản phẩm GCCM">
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${p.name}</h5>
-                            <p class="card-text mb-4">Độ dày: ${p.thicknessMm}mm<br>Giá: <b class="text-danger">${p.unitPrice.toLocaleString('vi-VN')} đ/m²</b></p>
-                            <input type="number" id="qty_${p.id}" class="form-control mt-auto mb-2" placeholder="Nhập số m² cần mua">
+                            <h5 class="card-title text-primary">${p.name}</h5>
+                            <p class="card-text mb-4">
+                                Khổ: ${p.widthM}m x ${p.lengthM}m <br>
+                                Độ dày: ${p.thicknessMm}mm <br>
+                                Giá: <b class="text-danger fs-5">${p.unitPrice.toLocaleString('vi-VN')} đ/m²</b>
+                            </p>
+                            <div class="mt-auto">
+                                <label class="form-label text-muted small">Số m² cần mua:</label>
+                                <input type="number" id="qty_${p.id}" class="form-control border-primary" placeholder="Nhập số lượng">
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -230,7 +513,7 @@
 
         const res = await fetch(`${API_BASE}/customer/orders`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwtToken },
             body: JSON.stringify(payload)
         });
 
@@ -241,23 +524,6 @@
             alert("Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại.");
         }
     }
-
-    // --- LOGIC ADMIN ---
-    async function loadAdminProducts() {
-        const res = await fetch(`${API_BASE}/admin/products`, { headers: getAuthHeaders() });
-        const products = await res.json();
-        const tbody = document.getElementById('adminTableBody');
-        tbody.innerHTML = "";
-        products.forEach(p => {
-            tbody.innerHTML += `<tr>
-                <td>${p.id}</td>
-                <td>${p.name}</td>
-                <td>${p.unitPrice.toLocaleString('vi-VN')} đ</td>
-                <td>${p.status === 1 ? '<span class="badge bg-success">Đang bán</span>' : '<span class="badge bg-danger">Ngừng bán</span>'}</td>
-            </tr>`;
-        });
-    }
 </script>
-
 </body>
 </html>

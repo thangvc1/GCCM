@@ -41,4 +41,7 @@ public class Product {
 
     @Column(nullable = false)
     private Integer status; // 1: Available, 0: Unavailable
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }

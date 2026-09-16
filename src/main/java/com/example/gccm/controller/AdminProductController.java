@@ -1,41 +1,57 @@
 package com.example.gccm.controller;
 
+import com.example.gccm.constant.MappingConstants;
 import com.example.gccm.entity.Product;
 import com.example.gccm.repository.NotificationRepository;
 import com.example.gccm.repository.ProductRepository;
+import com.example.gccm.service.CloudinaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/products")
-@CrossOrigin(origins = "*")
-public class ProductController {
+@RequestMapping(MappingConstants.API_ADMIN_PRODUCTS)
+public class AdminProductController {
 
     private final ProductRepository productRepository;
     private final NotificationRepository notificationRepository;
+    private final CloudinaryService cloudinaryService;
 
-    public ProductController(ProductRepository productRepository , NotificationRepository notificationRepository) {
+    public AdminProductController(ProductRepository productRepository,
+                                  NotificationRepository notificationRepository,
+                                  CloudinaryService cloudinaryService) {
         this.productRepository = productRepository;
         this.notificationRepository = notificationRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
-    // Lấy danh sách
     @GetMapping
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    // Thêm mới
-    @PostMapping
-    public Product createProduct(@RequestBody Product product) {
+    // THÊM MỚI (Hỗ trợ upload ảnh)
+    @PostMapping(consumes = {"multipart/form-data"})
+    public Product createProduct(
+            @RequestPart("product") Product product,
+            @RequestPart(value = "image", required = false) MultipartFile image) throws Exception {
+
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(image);
+            product.setImageUrl(imageUrl);
+        }
         return productRepository.save(product);
     }
 
-    // Cập nhật
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
+    // CẬP NHẬT (Hỗ trợ thay ảnh mới)
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<Product> updateProduct(
+            @PathVariable Long id,
+            @RequestPart("product") Product productDetails,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+
         return productRepository.findById(id).map(product -> {
             product.setName(productDetails.getName());
             product.setThicknessMm(productDetails.getThicknessMm());
@@ -46,21 +62,30 @@ public class ProductController {
             product.setStockQuantityM2(productDetails.getStockQuantityM2());
             product.setDescription(productDetails.getDescription());
             product.setStatus(productDetails.getStatus());
+
+            try {
+                // Nếu người dùng chọn ảnh mới thì mới upload và đè link cũ
+                if (image != null && !image.isEmpty()) {
+                    String imageUrl = cloudinaryService.uploadImage(image);
+                    product.setImageUrl(imageUrl);
+                }
+            } catch (Exception e) {
+                System.err.println("Lỗi upload ảnh khi cập nhật: " + e.getMessage());
+            }
+
             return ResponseEntity.ok(productRepository.save(product));
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // Xóa mềm (Chuyển trạng thái)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         return productRepository.findById(id).map(product -> {
-            product.setStatus(0); // 0: Ngừng bán
+            product.setStatus(0);
             productRepository.save(product);
             return ResponseEntity.ok().build();
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // Thêm đoạn này vào trong class ProductController (đã inject notificationRepository)
     @GetMapping("/notifications")
     public ResponseEntity<?> getUnreadNotifications() {
         return ResponseEntity.ok(notificationRepository.findByIsReadOrderByIdDesc(0));

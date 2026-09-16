@@ -1,5 +1,6 @@
 package com.example.gccm.controller;
 
+import com.example.gccm.constant.MappingConstants;
 import com.example.gccm.dto.JwtResponse;
 import com.example.gccm.dto.LoginRequest;
 import com.example.gccm.dto.RegisterRequest;
@@ -22,8 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+@RequestMapping(MappingConstants.API_AUTH_PREFIX)
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -60,26 +60,21 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest signUpRequest) {
-        // 1. Kiểm tra username đã tồn tại chưa
         if (accountRepository.findByUsername(signUpRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Lỗi: Tên đăng nhập đã tồn tại!");
         }
 
-        // 2. Tạo tài khoản mới (Account)
         Account account = new Account();
         account.setUsername(signUpRequest.getUsername());
-        account.setPassword(passwordEncoder.encode(signUpRequest.getPassword())); // Mã hóa mật khẩu
+        account.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
         account.setStatus(1);
         account.setCreatedAt(LocalDateTime.now());
 
-        // Lấy Role khách hàng mặc định
         Role userRole = roleRepository.findByRoleName("ROLE_CUSTOMER")
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy Role. Cần insert Role vào DB trước."));
         account.setRole(userRole);
-
         accountRepository.save(account);
 
-        // 3. Tạo thông tin hồ sơ (Customer)
         Customer customer = new Customer();
         customer.setAccount(account);
         customer.setFullName(signUpRequest.getFullName());

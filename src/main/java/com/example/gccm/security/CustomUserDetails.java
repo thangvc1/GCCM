@@ -16,8 +16,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Trả về Role của user (ví dụ: ROLE_ADMIN, ROLE_CUSTOMER)
-        return Collections.singleton(new SimpleGrantedAuthority(account.getRole().getRoleName()));
+        String roleName = account.getRole().getRoleName();
+        // Tự động gắn tiền tố ROLE_ nếu database chưa có để tránh lỗi 403 Forbidden
+        if (!roleName.startsWith("ROLE_")) {
+            roleName = "ROLE_" + roleName;
+        }
+        return Collections.singleton(new SimpleGrantedAuthority(roleName));
     }
 
     @Override

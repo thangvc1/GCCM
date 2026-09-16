@@ -1,5 +1,6 @@
 package com.example.gccm.controller;
 
+import com.example.gccm.constant.MappingConstants;
 import com.example.gccm.dto.OrderRequest;
 import com.example.gccm.entity.*;
 import com.example.gccm.repository.*;
@@ -9,11 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 
 @RestController
-@RequestMapping("/api/customer/orders")
-@CrossOrigin(origins = "*")
+@RequestMapping(MappingConstants.API_CUSTOMER_ORDERS)
 public class OrderController {
 
     private final OrderRepository orderRepository;
@@ -36,12 +35,10 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> placeOrder(@RequestBody OrderRequest request) {
-        // 1. Lấy thông tin khách hàng đang đăng nhập từ Token
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account account = accountRepository.findByUsername(username).orElseThrow();
         Customer customer = customerRepository.findByAccount(account).orElseThrow();
 
-        // 2. Tạo đơn hàng mới
         Order order = new Order();
         order.setCustomer(customer);
         order.setCustomerNote(request.getCustomerNote());
@@ -49,9 +46,8 @@ public class OrderController {
 
         BigDecimal totalArea = BigDecimal.ZERO;
         BigDecimal totalPrice = BigDecimal.ZERO;
-        order = orderRepository.save(order); // Lưu tạm để lấy ID
+        order = orderRepository.save(order);
 
-        // 3. Xử lý chi tiết sản phẩm
         for (var itemReq : request.getItems()) {
             Product product = productRepository.findById(itemReq.getProductId()).orElseThrow();
 
@@ -70,13 +66,11 @@ public class OrderController {
             orderDetailRepository.save(detail);
         }
 
-        // 4. Cập nhật tổng tiền vào đơn hàng (chưa áp dụng Voucher cho phiên bản này)
         order.setTotalAreaM2(totalArea);
         order.setTotalPrice(totalPrice);
         order.setFinalAmount(totalPrice);
         orderRepository.save(order);
 
-        // 5. Tạo thông báo cho Admin
         Notification notif = new Notification();
         notif.setTitle("Đơn yêu cầu tư vấn mới");
         notif.setContent("Khách hàng " + customer.getFullName() + " (SĐT: " + customer.getPhone() + ") vừa gửi yêu cầu đặt " + totalArea + " m2 thảm bê tông.");

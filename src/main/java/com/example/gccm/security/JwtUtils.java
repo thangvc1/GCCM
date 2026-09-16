@@ -2,6 +2,7 @@ package com.example.gccm.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -10,8 +11,11 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
-    // Khóa bảo mật (cần đủ dài, trong thực tế nên để ở application.properties)
-    private final String jwtSecret = "DayLaSecretKeyCuaDuAnThietKeWebBanThamBeTongGCCM123456789";
+
+    // Gọi biến cấu hình từ application.properties (đã ánh xạ từ .env)
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
     private final int jwtExpirationMs = 86400000; // Thời gian sống: 1 ngày (mili-giây)
 
     private Key key() {
@@ -22,7 +26,7 @@ public class JwtUtils {
         CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
         return Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
-                .claim("role", userPrincipal.getAccount().getRole().getRoleName()) // Nhét Role vào Token
+                .claim("role", userPrincipal.getAccount().getRole().getRoleName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key(), SignatureAlgorithm.HS256)
