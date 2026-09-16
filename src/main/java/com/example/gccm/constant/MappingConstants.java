@@ -57,4 +57,9 @@ public class MappingConstants {
      * ============================================================== */
     // Danh sách sản phẩm cho khách vãng lai
     public static final String API_PUBLIC_PRODUCTS = API_PUBLIC_PREFIX + "/products";
+
+    /* ==============================================================
+     * 6. CÔNG KHAI (PUBLIC) - TRANG CHỦ
+     * ============================================================== */
+    public static final String API_PUBLIC_ORDERS = API_PUBLIC_PREFIX + "/orders";
 }

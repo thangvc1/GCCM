@@ -8,21 +8,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(MappingConstants.API_CUSTOMER_ORDERS) // Tương đương: /api/v1/customer/orders
-public class OrderController {
+@RequestMapping(MappingConstants.API_PUBLIC_PREFIX + "/orders") // Tương đương: /api/v1/public/orders
+public class PublicOrderController {
 
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
+    public PublicOrderController(OrderService orderService) {
         this.orderService = orderService;
     }
 
-    // Customer tạo đơn hàng
+    // Endpoint POST để tạo đơn hàng mới
     @PostMapping
-    public ResponseEntity<?> placeOrder(@Valid @RequestBody OrderRequest request) {
+    public ResponseEntity<?> submitOrder(@Valid @RequestBody OrderRequest orderRequest) {
         try {
-            // Chỉ cần gọi sang Service, Service đã có logic tự động nhận diện Customer qua JWT
-            orderService.createOrder(request);
+            orderService.createOrder(orderRequest);
             return ResponseEntity.ok("Gửi yêu cầu đặt hàng thành công! Chúng tôi sẽ sớm liên hệ lại.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Lỗi khi xử lý đơn hàng: " + e.getMessage());

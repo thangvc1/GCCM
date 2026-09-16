@@ -4,6 +4,7 @@ import com.example.gccm.constant.MappingConstants;
 import com.example.gccm.dto.JwtResponse;
 import com.example.gccm.dto.LoginRequest;
 import com.example.gccm.dto.RegisterRequest;
+import com.example.gccm.dto.UserResponse;
 import com.example.gccm.entity.Account;
 import com.example.gccm.entity.Customer;
 import com.example.gccm.entity.Role;
@@ -12,6 +13,8 @@ import com.example.gccm.repository.CustomerRepository;
 import com.example.gccm.repository.RoleRepository;
 import com.example.gccm.security.CustomUserDetails;
 import com.example.gccm.security.JwtUtils;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,8 +47,9 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // THÊM @Valid ĐỂ KÍCH HOẠT KIỂM TRA DỮ LIỆU
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
@@ -58,8 +62,9 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), role));
     }
 
+    // THÊM @Valid ĐỂ KÍCH HOẠT KIỂM TRA DỮ LIỆU
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest signUpRequest) {
         if (accountRepository.findByUsername(signUpRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Lỗi: Tên đăng nhập đã tồn tại!");
         }
@@ -85,5 +90,34 @@ public class AuthController {
         customerRepository.save(customer);
 
         return ResponseEntity.ok("Đăng ký tài khoản thành công!");
+    }
+
+    // API LẤY THÔNG TIN NGƯỜI DÙNG HIỆN TẠI
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Chưa xác thực hoặc token hết hạn");
+        }
+
+        // Tận dụng luôn CustomUserDetails mà bạn đã xây dựng
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Account account = userDetails.getAccount();
+
+        // Truy vấn Customer dựa trên AccountID
+        Customer customer = customerRepository.findByAccountId(account.getId()).orElse(null);
+
+        UserResponse userResponse = UserResponse.builder()
+                .id(account.getId())
+                .username(account.getUsername())
+                .role(account.getRole().getRoleName())
+                .fullName(customer != null ? customer.getFullName() : null)
+                .email(account.getUsername()) // Nếu hệ thống dùng chung email làm username, hoặc bỏ trường này nếu entity Customer không có email
+                .phone(customer != null ? customer.getPhone() : null)
+                .address(customer != null ? customer.getAddress() : null)
+                .build();
+
+        return ResponseEntity.ok(userResponse);
     }
 }

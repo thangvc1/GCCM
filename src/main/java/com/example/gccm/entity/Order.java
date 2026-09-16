@@ -18,7 +18,7 @@ public class Order {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = true) // Cho phép null
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -46,4 +46,13 @@ public class Order {
     // Quan hệ 1-N tới OrderDetail
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetail> orderDetails;
+
+    @Column(name = "receiver_name", length = 100)
+    private String receiverName;
+
+    @Column(name = "receiver_phone", length = 20)
+    private String receiverPhone;
+
+    @Column(name = "delivery_address", length = 255)
+    private String deliveryAddress;
 }

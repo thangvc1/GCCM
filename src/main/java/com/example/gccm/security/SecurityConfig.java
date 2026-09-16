@@ -46,11 +46,18 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Mở API công khai (Trang chủ)
-                        .requestMatchers(HttpMethod.GET, MappingConstants.API_PUBLIC_PREFIX + "/**").permitAll()
+                        // 1. Mở CÁC API CÔNG KHAI
+                        // Bỏ giới hạn HttpMethod.GET đi để POST cũng vào được
+                        .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**").permitAll()
 
-                        // 2. Mở module xác thực (/api/v1/auth/...) VÀ trang test HTML
-                        .requestMatchers(MappingConstants.API_AUTH_PREFIX + "/**", "/test-crud.html").permitAll()
+                        // Hoặc nếu bạn muốn kiểm soát chặt hơn, hãy tách riêng:
+                        // .requestMatchers(HttpMethod.GET, MappingConstants.API_PUBLIC_PREFIX + "/**").permitAll()
+                        // .requestMatchers(HttpMethod.POST, MappingConstants.API_PUBLIC_PREFIX + "/orders").permitAll()
+
+                        // 2. Mở CỤ THỂ Login, Register VÀ trang test HTML
+                        .requestMatchers(MappingConstants.API_AUTH_PREFIX + "/login",
+                                MappingConstants.API_AUTH_PREFIX + "/register",
+                                "/test-crud.html").permitAll()
 
                         // 3. Phân quyền Admin & Customer
                         .requestMatchers(MappingConstants.API_ADMIN_PREFIX + "/**").hasAuthority("ROLE_ADMIN")
