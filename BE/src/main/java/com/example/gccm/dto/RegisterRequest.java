@@ -18,10 +18,6 @@ public class RegisterRequest {
     @Size(min = 6, max = 50, message = "Mật khẩu phải từ 6 đến 50 ký tự")
     private String password;
 
-    @NotBlank(message = "Email không được để trống")
-    @Email(message = "Email không đúng định dạng (ví dụ: ten@gmail.com)")
-    private String email;
-
     @NotBlank(message = "Họ và tên không được để trống")
     @Size(max = 100, message = "Họ tên không vượt quá 100 ký tự")
     private String fullName;

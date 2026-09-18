@@ -9,9 +9,9 @@
         <relativePath/>
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>gccm</artifactId>
+    <artifactId>BE</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>gccm</name>
+    <name>BE</name>
     <description>Hệ thống quản lý thảm bê tông GCCM</description>
 
     <properties>
@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
