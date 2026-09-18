@@ -5,7 +5,6 @@ import com.example.gccm.constant.MappingConstants;
 import com.example.gccm.dto.ProductPageRequest;
 import com.example.gccm.dto.ProductRequestDTO;
 import com.example.gccm.entity.Product;
-import com.example.gccm.repository.NotificationRepository;
 import com.example.gccm.repository.ProductRepository;
 import com.example.gccm.service.CloudinaryService;
 import jakarta.validation.Valid;
@@ -22,14 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class AdminProductController {
 
     private final ProductRepository productRepository;
-    private final NotificationRepository notificationRepository;
     private final CloudinaryService cloudinaryService;
 
     public AdminProductController(ProductRepository productRepository,
-                                  NotificationRepository notificationRepository,
                                   CloudinaryService cloudinaryService) {
         this.productRepository = productRepository;
-        this.notificationRepository = notificationRepository;
         this.cloudinaryService = cloudinaryService;
     }
 
@@ -41,7 +37,6 @@ public class AdminProductController {
         Sort.Direction direction = request.getSortBy().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(pageNo, request.getSize(), Sort.by(direction, request.getOrderBy()));
 
-        // SỬA Ở ĐÂY: Thay request.get() thành request.getQ()
         Page<Product> productPage = productRepository.searchProducts(request.getQ(), request.getStatus(), pageable);
 
         return ResponseEntity.ok(PageableObject.of(productPage));
@@ -94,11 +89,6 @@ public class AdminProductController {
             productRepository.save(product);
             return ResponseEntity.ok().build();
         }).orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/notifications")
-    public ResponseEntity<?> getUnreadNotifications() {
-        return ResponseEntity.ok(notificationRepository.findByIsReadOrderByIdDesc(0));
     }
 
     // Hàm tiện ích để đỡ phải viết lặp lại code gán dữ liệu

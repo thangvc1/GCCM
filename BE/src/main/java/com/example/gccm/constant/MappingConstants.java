@@ -42,6 +42,9 @@ public class MappingConstants {
     // Thống kê doanh thu
     public static final String API_ADMIN_STATISTICS = API_ADMIN_PREFIX + "/statistics";
 
+    // Quản lý Thông báo (MỚI THÊM)
+    public static final String API_ADMIN_NOTIFICATIONS = API_ADMIN_PREFIX + "/notifications";
+
     /* ==============================================================
      * 5. KHÁCH HÀNG (CUSTOMER)
      * ============================================================== */
@@ -58,8 +61,6 @@ public class MappingConstants {
     // Danh sách sản phẩm cho khách vãng lai
     public static final String API_PUBLIC_PRODUCTS = API_PUBLIC_PREFIX + "/products";
 
-    /* ==============================================================
-     * 6. CÔNG KHAI (PUBLIC) - TRANG CHỦ
-     * ============================================================== */
+    // Khách vãng lai gửi yêu cầu đặt hàng
     public static final String API_PUBLIC_ORDERS = API_PUBLIC_PREFIX + "/orders";
 }

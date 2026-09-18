@@ -46,13 +46,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Mở CÁC API CÔNG KHAI
-                        // Bỏ giới hạn HttpMethod.GET đi để POST cũng vào được
-                        .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**").permitAll()
-
-                        // Hoặc nếu bạn muốn kiểm soát chặt hơn, hãy tách riêng:
-                        // .requestMatchers(HttpMethod.GET, MappingConstants.API_PUBLIC_PREFIX + "/**").permitAll()
-                        // .requestMatchers(HttpMethod.POST, MappingConstants.API_PUBLIC_PREFIX + "/orders").permitAll()
+                        // 1. Mở CÁC API CÔNG KHAI và WEBSOCKET
+                        // Bổ sung "/ws/**" vào đây để cho phép WebSocket handshake
+                        .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**", "/ws/**").permitAll()
 
                         // 2. Mở CỤ THỂ Login, Register VÀ trang test HTML
                         .requestMatchers(MappingConstants.API_AUTH_PREFIX + "/login",

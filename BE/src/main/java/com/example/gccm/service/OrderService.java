@@ -11,6 +11,7 @@ import com.example.gccm.entity.*;
 import com.example.gccm.enums.NotificationType;
 import com.example.gccm.repository.*;
 import com.example.gccm.security.CustomUserDetails;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -30,15 +31,18 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
     private final NotificationRepository notificationRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public OrderService(OrderRepository orderRepository, OrderDetailRepository orderDetailRepository,
                         ProductRepository productRepository, CustomerRepository customerRepository,
-                        NotificationRepository notificationRepository) {
+                        NotificationRepository notificationRepository,
+                        SimpMessagingTemplate messagingTemplate) {
         this.orderRepository = orderRepository;
         this.orderDetailRepository = orderDetailRepository;
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.notificationRepository = notificationRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional // Đảm bảo nếu lỗi ở bất kỳ dòng nào, toàn bộ quá trình sẽ được Rollback
@@ -124,6 +128,7 @@ public class OrderService {
         notif.setIsRead(0);
         notif.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(notif);
+        messagingTemplate.convertAndSend("/topic/admin/notifications", notif);
 
         return order;
     }
