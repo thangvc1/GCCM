@@ -9,6 +9,7 @@ const emptyState = {
   products: [],
   customers: [],
   orders: [],
+  notifications: [],
   stockLogs: [],
 };
 
@@ -39,18 +40,22 @@ export function StoreProvider({ children }) {
       setState((current) => ({ ...current, products: collection(products) }));
       return;
     }
-    const [products, customers, orders, stockLogs, settings] =
+
+    const [products, customers, orders, stockLogs, settings, notifications] =
       await Promise.all([
         storeApi.getProducts(),
-        // storeApi.getCustomers(),
-        // storeApi.getOrders(),
-        // storeApi.getStockLogs(),
-        // storeApi.getSettings(),
+        storeApi.getCustomers(),
+        storeApi.getOrders(),
+        storeApi.getStockLogs(),
+        storeApi.getSettings(),
+        storeApi.getNotifications({ page: 1, size: 100 }),
       ]);
+
     setState({
       products: collection(products),
       customers: collection(customers),
       orders: collection(orders),
+      notifications: collection(notifications),
       stockLogs: collection(stockLogs),
       settings: unwrap(settings) || emptyState.settings,
     });

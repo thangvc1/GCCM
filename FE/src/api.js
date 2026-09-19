@@ -43,7 +43,6 @@ export const storeApi = {
   saveProduct: (id, product, image) => {
     const formData = new FormData();
 
-    // Thêm tên file "product.json" ở tham số thứ 3 cho Blob
     formData.append(
       "product",
       new Blob([JSON.stringify(product)], { type: "application/json" }),
@@ -71,6 +70,10 @@ export const storeApi = {
     api.get("/admin/orders", { params: pageParams(params) }),
   createOrder: (order) => api.post("/admin/orders", order),
   cancelOrder: (id) => api.patch(`/admin/orders/${id}/cancel`),
+  getNotifications: (params = {}) =>
+    api.get("/admin/notifications", { params: pageParams(params) }),
+  markNotificationRead: (id) => api.patch(`/admin/notifications/${id}/read`),
+  deleteNotification: (id) => api.delete(`/admin/notifications/${id}`),
   getStockLogs: (params) =>
     api.get("/admin/stock/logs", { params: pageParams(params) }),
   adjustStock: (adjustment) => api.post("/admin/stock/adjustments", adjustment),

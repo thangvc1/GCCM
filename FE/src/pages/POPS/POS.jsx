@@ -39,6 +39,7 @@ export default function POS() {
   const [selectedThickness, setSelectedThickness] = useState("10mm");
   const [area, setArea] = useState(200);
   const [orderModal, setOrderModal] = useState(null);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [form] = Form.useForm();
   const orderArea = Form.useWatch("area", form) || orderModal?.area || 200;
   const orderPayMethod = Form.useWatch("payMethod", form) || "Chuyển khoản";
@@ -61,7 +62,9 @@ export default function POS() {
       PRICING_TABLE.find((p) => p.thickness === thicknessStr) ||
       PRICING_TABLE[2];
     setOrderModal({
-      thickness: productThickness(item) ? `${productThickness(item)}mm` : thicknessStr,
+      thickness: productThickness(item)
+        ? `${productThickness(item)}mm`
+        : thicknessStr,
       item,
       area: defaultArea,
     });
@@ -69,20 +72,32 @@ export default function POS() {
   };
 
   const handleConfirmOrder = async (values) => {
+    if (!orderModal) return;
+    setIsSubmittingOrder(true);
     try {
       await publicApi.createOrder({
-        ...values,
-        thickness: orderModal.thickness,
-        area: Number(orderArea),
-        unitPrice: orderPrice,
-        total: orderTotal,
+        receiverName: values.customerName,
+        receiverPhone: values.phone,
+        deliveryAddress: values.address,
+        items: [
+          {
+            productId: orderModal.item.id,
+            quantityM2: Number(orderArea),
+          },
+        ],
+        customerNote: orderModal.thickness,
+        // unitPrice: orderPrice,
+        // total: orderTotal,
       });
       message.success(
         `Đặt hàng thành công cho công trình ${values.customerName}!`,
       );
       setOrderModal(null);
+      form.resetFields();
     } catch (error) {
       message.error(error?.message || "Không thể tạo đơn hàng");
+    } finally {
+      setIsSubmittingOrder(false);
     }
   };
 
@@ -310,6 +325,7 @@ export default function POS() {
         open={!!orderModal}
         onCancel={() => setOrderModal(null)}
         onOk={() => form.submit()}
+        confirmLoading={isSubmittingOrder}
         okText="Xác nhận tạo đơn"
         cancelText="Hủy"
       >
@@ -317,61 +333,65 @@ export default function POS() {
           <div className="order-modal-layout">
             <div className="order-modal-product">
               {productImage(orderModal.item) ? (
-                  <img
-                    src={productImage(orderModal.item)}
+                <img
+                  src={productImage(orderModal.item)}
                   alt={orderModal.item.name || orderModal.thickness}
                 />
               ) : (
                 <div className="order-modal-product-placeholder">BT</div>
               )}
-              <h3>{orderModal.item.name || `Bê tông cuộn ${orderModal.thickness}`}</h3>
+              <h3>
+                {orderModal.item.name || `Bê tông cuộn ${orderModal.thickness}`}
+              </h3>
               <strong>{vnd(orderModal.item.unitPrice || orderPrice)}</strong>
-              {orderModal.item.description && <p>{orderModal.item.description}</p>}
+              {orderModal.item.description && (
+                <p>{orderModal.item.description}</p>
+              )}
             </div>
             <div className="order-modal-form">
               <Form form={form} layout="vertical" onFinish={handleConfirmOrder}>
-            <Form.Item
-              name="customerName"
-              label="Tên người nhận / Công trình"
-              rules={[{ required: true }]}
-            >
-              <Input placeholder="Anh Hùng - Công trình Đồng Nai" />
-            </Form.Item>
-            <Form.Item
-              name="phone"
-              label="Số điện thoại"
-              rules={[{ required: true }]}
-            >
-              <Input placeholder="09xx xxx xxx" />
-            </Form.Item>
-            <Form.Item name="area" label="Diện tích (m²)">
-              <InputNumber min={200} style={{ width: "100%" }} />
-            </Form.Item>
-            <div className="order-payment-summary">
-              <div>
-                <span>Đơn giá</span>
-                <strong>{vnd(orderPrice)} / m²</strong>
-              </div>
-              <div>
-                <span>Tổng tiền</span>
-                <strong>{vnd(orderTotal)}</strong>
-              </div>
-              <div className="order-payment-due">
-                <span>Số tiền cần thanh toán</span>
-                <strong>{vnd(paymentDue)}</strong>
-              </div>
-            </div>
-            <Form.Item name="address" label="Địa chỉ giao hàng">
-              <Input placeholder="Số nhà, Xã, Tỉnh..." />
-            </Form.Item>
-            <Form.Item name="payMethod" label="Phương thức thanh toán">
-              <Select>
-                <Select.Option value="Chuyển khoản">
-                  Chuyển khoản cọc 50%
-                </Select.Option>
-                <Select.Option value="Chờ tư vấn">Chờ tư vấn</Select.Option>
-              </Select>
-            </Form.Item>
+                <Form.Item
+                  name="customerName"
+                  label="Tên người nhận / Công trình"
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="Anh Hùng - Công trình Đồng Nai" />
+                </Form.Item>
+                <Form.Item
+                  name="phone"
+                  label="Số điện thoại"
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="09xx xxx xxx" />
+                </Form.Item>
+                <Form.Item name="area" label="Diện tích (m²)">
+                  <InputNumber min={200} style={{ width: "100%" }} />
+                </Form.Item>
+                <div className="order-payment-summary">
+                  <div>
+                    <span>Đơn giá</span>
+                    <strong>{vnd(orderPrice)} / m²</strong>
+                  </div>
+                  <div>
+                    <span>Tổng tiền</span>
+                    <strong>{vnd(orderTotal)}</strong>
+                  </div>
+                  <div className="order-payment-due">
+                    <span>Số tiền cần thanh toán</span>
+                    <strong>{vnd(paymentDue)}</strong>
+                  </div>
+                </div>
+                <Form.Item name="address" label="Địa chỉ giao hàng">
+                  <Input placeholder="Số nhà, Xã, Tỉnh..." />
+                </Form.Item>
+                <Form.Item name="payMethod" label="Phương thức thanh toán">
+                  <Select>
+                    <Select.Option value="Chuyển khoản">
+                      Chuyển khoản cọc 50%
+                    </Select.Option>
+                    <Select.Option value="Chờ tư vấn">Chờ tư vấn</Select.Option>
+                  </Select>
+                </Form.Item>
               </Form>
             </div>
           </div>
