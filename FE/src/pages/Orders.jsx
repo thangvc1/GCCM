@@ -18,22 +18,75 @@ import {
 import { useStore } from "../store/StoreContext.jsx";
 import { fmtDate, vnd } from "../lib/format.js";
 
+const toOrderFromNotification = (notification) => {
+  const payload =
+    notification?.payload ??
+    notification?.order ??
+    notification?.data ??
+    notification;
+
+  const items = Array.isArray(payload?.items)
+    ? payload.items.map((item) => ({
+        name: item?.name || item?.productName || "Sản phẩm",
+        qty: Number(item?.qty ?? item?.quantity ?? item?.quantityM2 ?? 1),
+        price: Number(item?.price ?? item?.unitPrice ?? 0),
+      }))
+    : [];
+
+  return {
+    id: payload?.id ?? notification?.id,
+    code:
+      payload?.code ??
+      payload?.orderCode ??
+      notification?.title ??
+      `DH-${payload?.id || notification?.id}`,
+    customerName:
+      payload?.customerName ??
+      payload?.receiverName ??
+      notification?.customerName ??
+      "Khách hàng",
+    payMethod: payload?.payMethod ?? payload?.paymentMethod ?? "Chuyển khoản",
+    status: payload?.status ?? notification?.status ?? "hoàn tất",
+    total: Number(
+      payload?.total ?? payload?.amount ?? payload?.totalAmount ?? 0,
+    ),
+    at:
+      payload?.createdAt ??
+      payload?.created_at ??
+      notification?.createdAt ??
+      notification?.time ??
+      new Date().toISOString(),
+    items,
+    discount: Number(payload?.discount ?? 0),
+  };
+};
+
 export default function Orders() {
-  const { orders, cancelOrder } = useStore();
+  const { notifications, cancelOrder } = useStore();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("Tất cả");
   const [viewingOrder, setViewingOrder] = useState(null);
 
+  const orderList = useMemo(
+    () =>
+      Array.isArray(notifications)
+        ? notifications
+            .map(toOrderFromNotification)
+            .filter((item) => item && (item.code || item.customerName))
+        : [],
+    [notifications],
+  );
+
   const filteredOrders = useMemo(
     () =>
-      orders.filter((o) => {
+      orderList.filter((o) => {
         const okStatus = status === "Tất cả" || o.status === status;
         const okQuery = `${o.code} ${o.customerName}`
           .toLowerCase()
           .includes(q.toLowerCase());
         return okStatus && okQuery;
       }),
-    [orders, q, status],
+    [orderList, q, status],
   );
 
   const handleCancelOrder = (id) => {

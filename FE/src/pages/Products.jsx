@@ -1,4 +1,5 @@
 import {
+  EditOutlined,
   PlusOutlined,
   SearchOutlined,
   UploadOutlined,
@@ -12,7 +13,6 @@ import {
   Select,
   Space,
   Table,
-  Tag,
   Upload,
   message,
 } from "antd";
@@ -35,7 +35,7 @@ const emptyProduct = () => ({
 });
 
 export default function Products() {
-  const { products, saveProduct, deleteProduct } = useStore();
+  const { products, saveProduct } = useStore();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -113,17 +113,33 @@ export default function Products() {
 
       message.success(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!");
       setIsModalOpen(false);
-    } catch (error) {
-      console.error("Save error:", error);
+    } catch {
       message.error("Có lỗi xảy ra khi lưu sản phẩm!");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = (id) => {
-    deleteProduct(id);
-    message.success("Đã xóa sản phẩm");
+  const handleStatusChange = async (id, status) => {
+    try {
+      const product = products.find((item) => item.id === id);
+      if (!product) return;
+
+      await saveProduct(id, {
+        name: product.name,
+        thicknessMm: product.thicknessMm ?? null,
+        weightKgM2: product.weightKgM2 ?? null,
+        widthM: product.widthM ?? null,
+        lengthM: product.lengthM ?? null,
+        unitPrice: product.unitPrice ?? null,
+        stockQuantityM2: product.stockQuantityM2 ?? null,
+        description: product.description || "",
+        status: Number(status),
+      });
+      message.success("Đã thay đổi trạng thái sản phẩm");
+    } catch {
+      message.error("Không thể thay đổi trạng thái sản phẩm!");
+    }
   };
 
   const columns = [
@@ -185,6 +201,7 @@ export default function Products() {
       key: "thicknessMm",
       align: "right",
       render: (val) => (val ? `${val} mm` : "-"),
+      sorter: (a, b) => (a.thicknessMm || 0) - (b.thicknessMm || 0),
     },
     {
       title: "Trọng lượng",
@@ -192,6 +209,7 @@ export default function Products() {
       key: "weightKgM2",
       align: "right",
       render: (val) => (val ? `${val} kg/m²` : "-"),
+      sorter: (a, b) => (a.weightKgM2 || 0) - (b.weightKgM2 || 0),
     },
     {
       title: "Kích thước (R x D)",
@@ -201,6 +219,8 @@ export default function Products() {
         record.widthM && record.lengthM
           ? `${record.widthM}m x ${record.lengthM}m`
           : "-",
+      sorter: (a, b) =>
+        (a.widthM || 0) * (a.lengthM || 0) - (b.widthM || 0) * (b.lengthM || 0),
     },
     {
       title: "Giá bán",
@@ -223,19 +243,34 @@ export default function Products() {
       dataIndex: "status",
       key: "status",
       align: "center",
-      render: (status) =>
-        status === 1 ? (
-          <Tag color="success">Kinh doanh</Tag>
-        ) : (
-          <Tag color="default">Ngừng kinh doanh</Tag>
-        ),
+      render: (status, record) => (
+        <Select
+          value={Number(status)}
+          style={{ width: 150 }}
+          onChange={(value) => handleStatusChange(record.id, value)}
+          options={[
+            { value: 1, label: "Kinh doanh" },
+            { value: 0, label: "Ngừng kinh doanh" },
+          ]}
+        />
+      ),
     },
     {
       title: "Thao tác",
       key: "actions",
       align: "center",
-      // Xóa dòng này: fixed: "right",
-      render: (_, record) => <Space size="small">...</Space>,
+      fixed: "right",
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => handleOpenEdit(record)}
+          >
+            Sửa
+          </Button>
+        </Space>
+      ),
     },
   ];
 
@@ -394,6 +429,7 @@ export default function Products() {
 
             <Form.Item label="Ảnh sản phẩm">
               <Upload
+                className="product-image-upload"
                 beforeUpload={() => false}
                 maxCount={1}
                 fileList={fileList}

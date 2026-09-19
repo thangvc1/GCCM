@@ -3,20 +3,11 @@ import { useSocket } from "../hooks/useSocket";
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const [hasNew, setHasNew] = useState(false);
   const popoverRef = useRef(null);
 
-  const {
-    isConnected,
-    isFallback,
-    notifications,
-    sendTestNotification,
-    clearAll,
-  } = useSocket(() => {
-    setHasNew(true);
-  });
+  const { isConnected, notifications, markAsRead } = useSocket();
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // Đóng khi click ngoài
   useEffect(() => {
     function handleClickOutside(e) {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -29,30 +20,23 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const toggleOpen = () => {
-    setIsOpen(!isOpen);
-    if (!isOpen) setHasNew(false);
-  };
-
   return (
     <div className="notif-container" ref={popoverRef}>
       <button
         type="button"
-        className={`btn-icon-bell ${hasNew ? "has-new" : ""}`}
-        onClick={toggleOpen}
-        title="Thông báo hệ thống (WebSocket)"
+        className={`btn-icon-bell ${unreadCount > 0 ? "has-new" : ""}`}
+        onClick={() => setIsOpen((prev) => !prev)}
+        title="Thông báo hệ thống"
         aria-label="Thông báo"
       >
         <span className="bell-icon">🔔</span>
-        {notifications.length > 0 && (
-          <span className="notif-badge">{notifications.length}</span>
-        )}
+        {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
         <span
-          className={`socket-dot ${isConnected ? "online" : isFallback ? "demo" : "offline"}`}
+          className={`socket-dot ${isConnected ? "online" : "offline"}`}
           title={
             isConnected
-              ? "WebSocket: Đã kết nối Server (Port 5000)"
-              : "WebSocket: Đang ở chế độ Test nội bộ"
+              ? "WebSocket: đã kết nối"
+              : "WebSocket: đang chờ kết nối"
           }
         />
       </button>
@@ -61,46 +45,35 @@ export default function NotificationBell() {
         <div className="notif-dropdown">
           <div className="notif-header">
             <div className="notif-title-wrap">
-              <strong>Thông báo Realtime</strong>
+              <strong>Thông báo</strong>
               <span
-                className={`status-pill ${isConnected ? "online" : "demo"}`}
+                className={`status-pill ${isConnected ? "online" : "offline"}`}
               >
-                {isConnected ? "● Socket Online" : "● Test Mode"}
+                {isConnected ? "● Online" : "● Offline"}
               </span>
             </div>
-            {notifications.length > 0 && (
-              <button
-                type="button"
-                className="link-btn text-muted"
-                onClick={clearAll}
-              >
-                Xóa tất cả
-              </button>
-            )}
-          </div>
-
-          <div className="notif-actions">
-            <button
-              type="button"
-              className="btn-trigger-test"
-              onClick={() => sendTestNotification()}
-            >
-              + Bắn thông báo thử (Test Notification)
-            </button>
           </div>
 
           <div className="notif-list">
             {notifications.length === 0 ? (
-              <div className="notif-empty">Chưa có thông báo mới nào</div>
+              <div className="notif-empty">Chưa có thông báo mới</div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} className="notif-item">
+                <button
+                  key={n.id}
+                  type="button"
+                  className={`notif-item ${n.isRead ? "read" : "unread"}`}
+                  onClick={() => {
+                    if (!n.isRead) markAsRead(n.id);
+                  }}
+                  aria-label={`Xem thông báo ${n.title}`}
+                >
                   <div className="notif-item-top">
                     <span className="notif-item-title">{n.title}</span>
                     <span className="notif-item-time">{n.time}</span>
                   </div>
                   <div className="notif-item-msg">{n.message}</div>
-                </div>
+                </button>
               ))
             )}
           </div>
