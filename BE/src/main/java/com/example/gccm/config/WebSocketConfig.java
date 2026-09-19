@@ -20,9 +20,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // "/topic" là tiền tố cho các kênh (channel) mà Frontend sẽ lắng nghe
-        registry.enableSimpleBroker("/topic");
-        // "/app" là tiền tố nếu Frontend muốn gửi message ngược lại lên Backend
+        // Hỗ trợ cả 2 loại kênh: "/topic" (phát chung) và "/queue" (phát riêng hoặc hàng đợi)
+        registry.enableSimpleBroker("/topic", "/queue");
+
         registry.setApplicationDestinationPrefixes("/app");
+
+        // Thêm cấu hình này để STOMP hiểu các destination bắt đầu bằng "/user"
+        // là tin nhắn dành riêng cho một user cụ thể.
+        registry.setUserDestinationPrefix("/user");
     }
 }
