@@ -5,6 +5,11 @@
     <title>GCCM - Hệ Thống Đặt Hàng & Quản Lý</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- THÊM THƯ VIỆN WEBSOCKET & STOMP -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
     <style>
         body { padding: 20px; background-color: #f8f9fa; }
         .hidden { display: none !important; }
@@ -70,7 +75,7 @@
             </div>
         </div>
 
-        <!-- Form Thêm Mới Nhanh Sản Phẩm (Đã Khôi Phục) -->
+        <!-- Form Thêm Mới Nhanh Sản Phẩm -->
         <div class="card p-3 mb-4 shadow-sm">
             <h5>Thêm Sản Phẩm Mới</h5>
             <div class="row g-2">
@@ -99,7 +104,7 @@
             </div>
         </div>
 
-        <!-- Bảng Dữ liệu Sản Phẩm (Đã Khôi Phục Các Nút Hành Động) -->
+        <!-- Bảng Dữ liệu Sản Phẩm -->
         <table class="table table-bordered table-hover bg-white shadow-sm align-middle">
             <thead class="table-dark">
             <tr>
@@ -212,16 +217,16 @@
 
     let registerModalObj = null;
     let editModalObj = null;
+    let stompClient = null; // CHUẨN BỊ BIẾN WEBSOCKET
 
     document.addEventListener("DOMContentLoaded", function() {
         registerModalObj = new bootstrap.Modal(document.getElementById('registerModal'));
-        editModalObj = new bootstrap.Modal(document.getElementById('editModal')); // Khởi tạo Edit Modal
+        editModalObj = new bootstrap.Modal(document.getElementById('editModal'));
         if (jwtToken && currentRole) {
             routeUser(currentRole);
         }
     });
 
-    // ... (Giữ nguyên các hàm login, register, continueAsGuest, fetchMyProfile, routeUser, logout) ...
     async function login() {
         const payload = {
             username: document.getElementById('username').value,
@@ -289,6 +294,39 @@
         }
     }
 
+    // ================== LOGIC KẾT NỐI WEBSOCKET ==================
+    function connectWebSocket() {
+        const socket = new SockJS('http://localhost:8080/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null; // Tắt bớt log rác
+
+        stompClient.connect({}, function (frame) {
+            console.log('Đã kết nối WebSocket thành công!');
+
+            // Lắng nghe kênh thông báo
+            stompClient.subscribe('/topic/admin/notifications', function (message) {
+                const notif = JSON.parse(message.body);
+                const list = document.getElementById('notificationList');
+
+                if (list.innerHTML.includes("Không có thông báo mới")) {
+                    list.innerHTML = "";
+                }
+
+                // Chèn thông báo lên đầu
+                const newLi = `
+                    <li class="list-group-item bg-light border-warning">
+                        <span class="badge bg-danger">MỚI</span>
+                        <strong>${notif.title}</strong><br>
+                        <small>${notif.content.replace(/\n/g, '<br>')}</small>
+                    </li>`;
+                list.insertAdjacentHTML('afterbegin', newLi);
+
+                // Load lại luôn danh sách đơn hàng
+                loadAdminOrders();
+            });
+        });
+    }
+
     function routeUser(role) {
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('logoutBtnArea').classList.remove('hidden');
@@ -299,6 +337,10 @@
             loadAdminProducts();
             loadNotifications();
             loadAdminOrders();
+
+            // KÍCH HOẠT WEBSOCKET NẾU LÀ ADMIN
+            if (stompClient === null) connectWebSocket();
+
         } else if (role === 'ROLE_CUSTOMER') {
             document.getElementById('customerSection').classList.remove('hidden');
             loadCustomerProducts();
@@ -306,6 +348,7 @@
     }
 
     function logout() {
+        if (stompClient !== null) stompClient.disconnect();
         localStorage.clear();
         location.reload();
     }
@@ -330,7 +373,6 @@
                     <td class="text-danger">${p.unitPrice.toLocaleString('vi-VN')} đ</td><td>${p.stockQuantityM2} m²</td>
                     <td>${p.status === 1 ? 'Bán' : 'Dừng'}</td>
                     <td>
-                        <!-- KHÔI PHỤC LẠI NÚT SỬA VÀ XÓA -->
                         <button class="btn btn-sm btn-warning" onclick="openEditModal('${pStr}')">Sửa</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Xóa</button>
                     </td>
@@ -374,7 +416,6 @@
         }
     }
 
-    // KHÔI PHỤC LẠI LOGIC MỞ MODAL SỬA
     function openEditModal(encodedProduct) {
         const p = JSON.parse(decodeURIComponent(encodedProduct));
         document.getElementById('editProdId').value = p.id;
@@ -391,7 +432,6 @@
         editModalObj.show();
     }
 
-    // KHÔI PHỤC LẠI LOGIC CẬP NHẬT SẢN PHẨM
     async function updateProduct() {
         const id = document.getElementById('editProdId').value;
         const productData = {
@@ -429,7 +469,6 @@
         }
     }
 
-    // KHÔI PHỤC LẠI LOGIC XÓA SẢN PHẨM
     async function deleteProduct(id) {
         if (!confirm("Chuyển sản phẩm sang trạng thái ngừng bán?")) return;
         const res = await fetch(`${API_BASE}/admin/products/${id}`, {
@@ -439,7 +478,6 @@
         if (res.ok) loadAdminProducts();
     }
 
-    // KHÔI PHỤC LẠI LOGIC RESET FORM
     function resetForm() {
         document.getElementById('name').value = "";
         document.getElementById('thickness').value = "";
@@ -452,7 +490,6 @@
         document.getElementById('status').value = "1";
     }
 
-    // ... (Giữ nguyên các hàm loadAdminOrders, loadNotifications, loadCustomerProducts, submitOrder) ...
     async function loadAdminOrders() {
         try {
             const res = await fetch(`${API_BASE}/admin/orders?page=1&size=50`, {
@@ -478,15 +515,27 @@
         }
     }
 
+    // ĐÃ SỬA LẠI URL TRỎ TỚI ADMIN NOTIFICATION CONTROLLER
     async function loadNotifications() {
-        const res = await fetch(`${API_BASE}/admin/products/notifications`, { headers: { 'Authorization': 'Bearer ' + jwtToken } });
-        const notifs = await res.json();
-        const list = document.getElementById('notificationList');
-        if(notifs.length > 0) {
-            list.innerHTML = "";
-            notifs.forEach(n => {
-                list.innerHTML += `<li class="list-group-item"><span class="badge bg-danger">${n.type || 'TB'}</span> <strong>${n.title}</strong><br><small>${n.content.replace(/\n/g, '<br>')}</small></li>`;
+        try {
+            const res = await fetch(`${API_BASE}/admin/notifications`, {
+                headers: { 'Authorization': 'Bearer ' + jwtToken }
             });
+            const notifs = await res.json();
+            const list = document.getElementById('notificationList');
+            if(notifs.length > 0) {
+                list.innerHTML = "";
+                notifs.forEach(n => {
+                    list.innerHTML += `
+                        <li class="list-group-item">
+                            <span class="badge bg-secondary">${n.type || 'TB'}</span>
+                            <strong>${n.title}</strong><br>
+                            <small>${n.content.replace(/\n/g, '<br>')}</small>
+                        </li>`;
+                });
+            }
+        } catch (e) {
+            console.error("Lỗi tải lịch sử thông báo", e);
         }
     }
 
@@ -544,7 +593,14 @@
 
         if (res.ok) {
             alert("Đã gửi yêu cầu đặt hàng thành công!");
-            location.reload();
+
+            // Xóa form sau khi gửi
+            document.getElementById('receiverName').value = "";
+            document.getElementById('receiverPhone').value = "";
+            document.getElementById('deliveryAddress').value = "";
+            document.getElementById('customerNote').value = "";
+            storeProducts.forEach(p => document.getElementById(`qty_${p.id}`).value = "");
+
         } else {
             const errorMsg = await res.text();
             document.getElementById('orderErrorMsg').innerText = "Lỗi: " + errorMsg;
