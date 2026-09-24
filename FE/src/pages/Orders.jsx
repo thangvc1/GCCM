@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Tag,
@@ -16,6 +16,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import { useStore } from "../store/StoreContext.jsx";
+import { pageResult, storeApi } from "../api.js";
 import { fmtDate, vnd } from "../lib/format.js";
 
 const toOrderFromNotification = (notification) => {
@@ -30,6 +31,7 @@ const toOrderFromNotification = (notification) => {
         name: item?.name || item?.productName || "Sản phẩm",
         qty: Number(item?.qty ?? item?.quantity ?? item?.quantityM2 ?? 1),
         price: Number(item?.price ?? item?.unitPrice ?? 0),
+        totalPrice: Number(item?.totalPrice ?? 0),
       }))
     : [];
 
@@ -45,11 +47,10 @@ const toOrderFromNotification = (notification) => {
       payload?.receiverName ??
       notification?.customerName ??
       "Khách hàng",
+    receiverName: payload?.receiverName ?? "",
+    receiverPhone: payload?.receiverPhone ?? "",
     payMethod: payload?.payMethod ?? payload?.paymentMethod ?? "Chuyển khoản",
-    status: payload?.status ?? notification?.status ?? "hoàn tất",
-    total: Number(
-      payload?.total ?? payload?.amount ?? payload?.totalAmount ?? 0,
-    ),
+    total: Number(payload?.totalPrice || 0),
     at:
       payload?.createdAt ??
       payload?.created_at ??
@@ -62,10 +63,24 @@ const toOrderFromNotification = (notification) => {
 };
 
 export default function Orders() {
-  const { notifications, cancelOrder } = useStore();
+  const { cancelOrder } = useStore();
+  const [notifications, setNotifications] = useState([]);
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(10);
+  const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("Tất cả");
   const [viewingOrder, setViewingOrder] = useState(null);
+
+  const loadOrders = async () => {
+    const result = pageResult(await storeApi.getOrders({ page, size }));
+    setNotifications(result.items);
+    setTotal(result.total);
+  };
+
+  useEffect(() => {
+    loadOrders();
+  }, [page, size]);
 
   const orderList = useMemo(
     () =>
@@ -90,7 +105,7 @@ export default function Orders() {
   );
 
   const handleCancelOrder = (id) => {
-    cancelOrder(id);
+    cancelOrder(id).then(loadOrders);
     message.warning("Đã hủy đơn hàng và hoàn trả số lượng vào kho");
   };
 
@@ -114,27 +129,39 @@ export default function Orders() {
       key: "customerName",
     },
     {
+      title: "Người nhận",
+      dataIndex: "receiverName",
+      key: "receiverName",
+      render: (name) => name || "-",
+    },
+    {
+      title: "Số điện thoại",
+      dataIndex: "receiverPhone",
+      key: "receiverPhone",
+      render: (phone) => phone || "-",
+    },
+    {
       title: "Hình thức",
       dataIndex: "payMethod",
       key: "payMethod",
       render: (method) => <Tag color="geekblue">{method}</Tag>,
     },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (st) => {
-        const isCanceled = st === "đã hủy";
-        return (
-          <Tag color={isCanceled ? "error" : "success"}>{st.toUpperCase()}</Tag>
-        );
-      },
-      filters: [
-        { text: "Hoàn tất", value: "hoàn tất" },
-        { text: "Đã hủy", value: "đã hủy" },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
+    // {
+    //   title: "Trạng thái",
+    //   dataIndex: "status",
+    //   key: "status",
+    //   render: (st) => {
+    //     const isCanceled = st === "đã hủy";
+    //     return (
+    //       <Tag color={isCanceled ? "error" : "success"}>{st.toUpperCase()}</Tag>
+    //     );
+    //   },
+    //   filters: [
+    //     { text: "Hoàn tất", value: "hoàn tất" },
+    //     { text: "Đã hủy", value: "đã hủy" },
+    //   ],
+    //   onFilter: (value, record) => record.status === value,
+    // },
     {
       title: "Tổng tiền",
       dataIndex: "total",
@@ -157,7 +184,7 @@ export default function Orders() {
           >
             Chi tiết
           </Button>
-          {record.status !== "đã hủy" && (
+          {/* {record.status !== "đã hủy" && (
             <Popconfirm
               title="Hủy đơn hàng"
               description={`Xác nhận hủy đơn ${record.code} và hoàn lại kho?`}
@@ -170,7 +197,7 @@ export default function Orders() {
                 Hủy
               </Button>
             </Popconfirm>
-          )}
+          )} */}
         </Space>
       ),
     },
@@ -215,10 +242,16 @@ export default function Orders() {
           dataSource={filteredOrders}
           rowKey="id"
           pagination={{
-            pageSize: 8,
+            current: page,
+            pageSize: size,
             showSizeChanger: true,
-            pageSizeOptions: ["8", "15", "30"],
-            showTotal: (total) => `Tổng cộng ${total} đơn hàng`,
+            pageSizeOptions: ["10", "50", "100"],
+            total,
+            showTotal: (count) => `Tổng cộng ${count} đơn hàng`,
+            onChange: (nextPage, nextSize) => {
+              setPage(nextSize !== size ? 1 : nextPage);
+              setSize(nextSize);
+            },
           }}
         />
       </div>
@@ -245,6 +278,10 @@ export default function Orders() {
               {fmtDate(viewingOrder.at)} ·{" "}
               <Tag color="geekblue">{viewingOrder.payMethod}</Tag>
             </p>
+            <p className="sub" style={{ marginBottom: 16 }}>
+              Người nhận: <strong>{viewingOrder.receiverName || "-"}</strong>
+              {viewingOrder.receiverPhone && ` · ${viewingOrder.receiverPhone}`}
+            </p>
 
             <div style={{ borderTop: "1px solid #eee", paddingTop: 10 }}>
               {viewingOrder.items.map((item, idx) => (
@@ -260,7 +297,9 @@ export default function Orders() {
                   <span>
                     {item.name} × <strong>{item.qty}</strong>
                   </span>
-                  <strong>{vnd(item.price * item.qty)}</strong>
+                  <strong>
+                    {vnd(item.totalPrice || item.price * item.qty)}
+                  </strong>
                 </div>
               ))}
             </div>

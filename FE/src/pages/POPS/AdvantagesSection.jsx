@@ -1,36 +1,36 @@
 const advantages = [
   {
-    icon: "🏗️",
+    image: "/dist/img/anh2.jpg",
     title: "Bền 8–10 năm",
     description:
       "Bê tông cuộn sản xuất đạt tiêu chuẩn công nghệ, chịu lực nén cao, không nứt vỡ theo thời gian.",
   },
   {
-    icon: "💧",
+    image: "/dist/img/anh3.jpg",
     title: "Chống thấm tuyệt đối",
     description:
       "Bề mặt xử lý đặc biệt, chống thấm nước và dầu mỡ, dễ vệ sinh bằng áp lực nước.",
   },
   {
-    icon: "🔇",
+    image: "/dist/img/anh12.jpg",
     title: "Cách âm, cách nhiệt",
     description:
       "Lớp bê tông dày giúp giảm tiếng ồn và cách nhiệt hiệu quả cho không gian phía dưới.",
   },
   {
-    icon: "⚡",
+    image: "/dist/img/anh5.jpg",
     title: "Lắp đặt nhanh",
     description:
       "Không cần trộn vữa, không chờ khô. Rải là hoàn thành – tiết kiệm 80% thời gian thi công.",
   },
   {
-    icon: "🏭",
+    image: "/dist/img/anh6.jpg",
     title: "Hỗ trợ thi công",
     description:
       "Công trình trên 5.000m² được đội ngũ kỹ thuật hỗ trợ thi công trực tiếp tại công trình.",
   },
   {
-    icon: "📦",
+    image: "/dist/img/anh11.jpg",
     title: "Giao hàng toàn quốc",
     description:
       "Hệ thống vận chuyển chuyên dụng, đảm bảo sản phẩm đến tay khách hàng nguyên vẹn.",
@@ -47,9 +47,11 @@ export default function AdvantagesSection() {
       <div className="lp-advantages-grid">
         {advantages.map((advantage) => (
           <article className="adv-card" key={advantage.title}>
-            <div className="adv-icon" aria-hidden="true">
-              {advantage.icon}
-            </div>
+            <img
+              className="adv-image"
+              src={advantage.image}
+              alt={advantage.title}
+            />
             <h3 className="adv-title">{advantage.title}</h3>
             <p className="adv-desc">{advantage.description}</p>
           </article>

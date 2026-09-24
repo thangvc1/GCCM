@@ -44,10 +44,10 @@ export function StoreProvider({ children }) {
     const [products, customers, orders, stockLogs, settings, notifications] =
       await Promise.all([
         storeApi.getProducts(),
-        storeApi.getCustomers(),
+        // storeApi.getCustomers(),
         storeApi.getOrders(),
-        storeApi.getStockLogs(),
-        storeApi.getSettings(),
+        // storeApi.getStockLogs(),
+        // storeApi.getSettings(),
         storeApi.getNotifications({ page: 1, size: 100 }),
       ]);
 

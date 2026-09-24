@@ -15,7 +15,7 @@ export default function Dashboard() {
     .map((p) => ({
       ...p,
       sold: done.reduce(
-        (s, o) => s + (o.items.find((i) => i.productId === p.id)?.qty || 0),
+        (s, o) => s + (o.items?.find((i) => i.productId === p.id)?.qty || 0),
         0,
       ),
     }))

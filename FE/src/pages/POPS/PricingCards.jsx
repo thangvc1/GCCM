@@ -69,11 +69,11 @@ export default function PricingCards({ onOpenOrder }) {
   }, [page]);
 
   return (
-    <div style={{ padding: "30px 0" }} id="bang-gia">
+    <div id="bang-gia">
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <div style={{ textAlign: "center", marginBottom: 24 }}>
           <Text type="secondary" strong>
-            THẢM XI MĂNG VIỆT NAM
+            THẢM BÊ TÔNG VIỆT NAM
           </Text>
           <Title level={2}>Bảng Giá Bê Tông Cuộn</Title>
           <Text type="secondary">
@@ -111,9 +111,6 @@ export default function PricingCards({ onOpenOrder }) {
                 <strong className="pops-product-price">
                   {vnd(item.unitPrice || 0)}
                 </strong>
-                <Text type="secondary">
-                  {item.description || "Sản phẩm bê tông cuộn chính hãng"}
-                </Text>
                 <Button
                   type="primary"
                   block

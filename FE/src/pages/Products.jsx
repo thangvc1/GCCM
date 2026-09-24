@@ -6,6 +6,7 @@ import {
 } from "@ant-design/icons";
 import {
   Button,
+  App as AntdApp,
   Form,
   Input,
   InputNumber,
@@ -14,10 +15,10 @@ import {
   Space,
   Table,
   Upload,
-  message,
 } from "antd";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { pageResult, storeApi } from "../api.js";
 import { num, vnd } from "../lib/format.js";
 import { useStore } from "../store/StoreContext.jsx";
 
@@ -35,7 +36,8 @@ const emptyProduct = () => ({
 });
 
 export default function Products() {
-  const { products, saveProduct } = useStore();
+  const { message: appMessage, modal } = AntdApp.useApp();
+  const { saveProduct } = useStore();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -48,7 +50,21 @@ export default function Products() {
 
   // Quản lý trang hiện tại để tính chính xác STT
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(8);
+  const [pageSize, setPageSize] = useState(10);
+  const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+
+  const loadProducts = async () => {
+    const result = pageResult(
+      await storeApi.getProducts({ page: currentPage, size: pageSize }),
+    );
+    setProducts(result.items);
+    setTotal(result.total);
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, [currentPage, pageSize]);
 
   const filteredList = useMemo(
     () =>
@@ -110,11 +126,14 @@ export default function Products() {
 
       // ✅ Truyền đủ 3 tham số: id, Object JSON, File ảnh
       await saveProduct(editingProduct?.id, productData, imageFile);
+      await loadProducts();
 
-      message.success(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!");
+      appMessage.success(
+        isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!",
+      );
       setIsModalOpen(false);
     } catch {
-      message.error("Có lỗi xảy ra khi lưu sản phẩm!");
+      appMessage.error("Có lỗi xảy ra khi lưu sản phẩm!");
     } finally {
       setLoading(false);
     }
@@ -136,10 +155,27 @@ export default function Products() {
         description: product.description || "",
         status: Number(status),
       });
-      message.success("Đã thay đổi trạng thái sản phẩm");
+      await loadProducts();
+      appMessage.success("Đã thay đổi trạng thái sản phẩm");
     } catch {
-      message.error("Không thể thay đổi trạng thái sản phẩm!");
+      appMessage.error("Không thể thay đổi trạng thái sản phẩm!");
     }
+  };
+
+  const handleStatusSelect = (record, status) => {
+    if (Number(status) !== 0) {
+      handleStatusChange(record.id, status);
+      return;
+    }
+
+    modal.confirm({
+      title: "Xác nhận ngừng kinh doanh",
+      content: `Bạn có chắc muốn ngừng kinh doanh sản phẩm "${record.name}" không?`,
+      okText: "Ngừng kinh doanh",
+      cancelText: "Hủy",
+      okButtonProps: { danger: true },
+      onOk: () => handleStatusChange(record.id, 0),
+    });
   };
 
   const columns = [
@@ -247,7 +283,7 @@ export default function Products() {
         <Select
           value={Number(status)}
           style={{ width: 150 }}
-          onChange={(value) => handleStatusChange(record.id, value)}
+          onChange={(value) => handleStatusSelect(record, value)}
           options={[
             { value: 1, label: "Kinh doanh" },
             { value: 0, label: "Ngừng kinh doanh" },
@@ -328,8 +364,9 @@ export default function Products() {
             current: currentPage,
             pageSize: pageSize,
             showSizeChanger: true,
-            pageSizeOptions: ["8", "15", "30"],
-            showTotal: (total) => `Tổng cộng ${total} sản phẩm`,
+            pageSizeOptions: ["10", "50", "100"],
+            total,
+            showTotal: (count) => `Tổng cộng ${count} sản phẩm`,
             onChange: (page, size) => {
               setCurrentPage(page);
               setPageSize(size);

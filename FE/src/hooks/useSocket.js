@@ -88,8 +88,6 @@ export function useSocket(onNotification) {
   const addNotification = useCallback(
     async (data) => {
       const item = normalizeNotification(data);
-      console.log("### Payload của BE:", data);
-
       setNotifications((prev) => {
         const map = new Map(prev.map((n) => [String(n.id), n]));
         map.set(String(item.id), item);
@@ -118,7 +116,6 @@ export function useSocket(onNotification) {
       reconnectDelay: 5000,
       debug: () => {},
       onConnect: () => {
-        console.log("STOMP connected");
         setIsConnected(true);
         setIsFallback(false);
         loadNotifications();
@@ -130,14 +127,11 @@ export function useSocket(onNotification) {
 
         subscriptions.forEach((destination) => {
           try {
-            console.log("Subscribing to:", destination);
             client.subscribe(destination, (frame) => {
               try {
                 const message = JSON.parse(frame.body);
-                console.log("### Payload của BE:", message);
                 addNotification(message);
               } catch {
-                console.log("### Payload của BE:", frame.body);
                 addNotification({
                   id: Date.now(),
                   title: "Thông báo mới",

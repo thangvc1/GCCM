@@ -1,15 +1,13 @@
-# Quản lý cửa hàng (React, chạy local)
+# Thảm Bê Tông Việt Nam (React)
 
-Web quản lý bán lẻ: tổng quan, quầy bán, sản phẩm, đơn hàng, khách hàng, tồn kho, báo cáo.
+Web Thảm Bê Tông Việt Nam: tổng quan, sản phẩm, đơn hàng, khách hàng, tồn kho, báo cáo.
 
 ## Chạy trên máy
 
 ```bash
-cd quan-ly-cua-hang
+cd FE
 npm install
 npm run dev
 ```
 
 Mở trình duyệt tại `http://localhost:5173`.
-
-Dữ liệu lưu trong trình duyệt (localStorage), không cần máy chủ hay database.
