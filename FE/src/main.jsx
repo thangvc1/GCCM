@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import { ConfigProvider } from "antd";
+import { App as AntdApp, ConfigProvider } from "antd";
 import viVN from "antd/locale/vi_VN";
 import App from "./App.jsx";
 import { StoreProvider } from "./store/StoreContext.jsx";
@@ -14,19 +14,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       locale={viVN}
       theme={{
         token: {
-          colorPrimary: "#2d6a4f",
+          colorPrimary: "#DF8A0F",
           borderRadius: 12,
           fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
         },
       }}
     >
-      <BrowserRouter>
-        <AuthProvider>
-          <StoreProvider>
-            <App />
-          </StoreProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <AntdApp>
+        <BrowserRouter>
+          <AuthProvider>
+            <StoreProvider>
+              <App />
+            </StoreProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </AntdApp>
     </ConfigProvider>
   </React.StrictMode>,
 );

@@ -27,7 +27,17 @@ export default function Register() {
       <div className="auth-card">
         <div className="auth-header">
           <div className="brand-mark" style={{ margin: "0 auto 12px" }}>
-            CH
+            <img
+              src="/dist/img/logo.jpg"
+              alt="Thảm Bê Tông Việt Nam"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: "inherit",
+                display: "block",
+              }}
+            />
           </div>
           <h1>Đăng ký tài khoản</h1>
           <p>Tạo tài khoản nhân viên hoặc quản lý</p>

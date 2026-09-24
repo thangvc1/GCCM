@@ -1,5 +1,7 @@
+import { PhoneOutlined } from "@ant-design/icons";
 import {
   Avatar,
+  Button,
   Dropdown,
   Form,
   Input,
@@ -8,18 +10,23 @@ import {
   message,
   Modal,
   Select,
+  Space,
 } from "antd";
 import { useState } from "react";
-import ContactSection from "./ContactSection";
-import AdvantagesSection from "./AdvantagesSection";
-import FastCalculator from "./FastCalculator";
-import PricingCards from "./PricingCards";
-import PricingTable from "./PricingTable";
-import { PRICING_TABLE } from "./fakedata";
 import { Link } from "react-router-dom";
+import { publicApi } from "../../api.js";
 import { vnd } from "../../lib/format.js";
 import { useAuth } from "../../store/AuthContext.jsx";
-import { publicApi } from "../../api.js";
+import AboutSection from "./AboutSection";
+import AdvantagesSection from "./AdvantagesSection";
+import ContactSection from "./ContactSection";
+import FastCalculator from "./FastCalculator";
+import HeroSection from "./HeroSection";
+import PricingCards from "./PricingCards";
+import ProcessSection from "./ProcessSection";
+import SpecsSection from "./SpecsSection";
+import StructureSection from "./StructureSection";
+import { PRICING_TABLE } from "./fakedata";
 
 const { Header, Content, Footer } = Layout;
 const productImage = (product) =>
@@ -107,27 +114,67 @@ export default function POS() {
       style={{ border: "none", minHeight: "100vh" }}
     >
       <header className="landing-header">
-        <div className="landing-brand">
-          <div className="brand-badge-box">BT</div>
+        <Link className="landing-brand" to="/">
+          <img
+            src="/dist/img/logo.jpg"
+            alt="Thảm Bê Tông Việt Nam logo"
+            style={{
+              width: 42,
+              height: 42,
+              objectFit: "cover",
+              borderRadius: 10,
+              display: "block",
+            }}
+          />
           <div className="brand-text-wrap">
             <span className="brand-title">THẢM BÊ TÔNG</span>
             <span className="brand-sub">Việt Nam</span>
           </div>
-        </div>
+        </Link>
 
         <nav className="landing-nav-links">
+          <a href="#ve-chung-toi">Về chúng tôi</a>
+          <a href="#cau-tao">Cấu tạo sản phẩm</a>
+          <a href="#quy-trinh">Quy trình</a>
+          <a href="#thong-so">Thông số</a>
           <a href="#bang-gia">Bảng giá</a>
           <a href="#uu-diem">Ưu điểm</a>
           <a href="#lien-he">Liên hệ</a>
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="landing-header-actions">
           {/* Nút Số điện thoại */}
-          <a href="tel:0979749602" className="btn-header-phone">
-            <span className="phone-ico">📞</span>
-            <strong>0979 749 602</strong>
-          </a>
+          <Space size={8}>
+            <Button
+              type="default"
+              icon={<PhoneOutlined />}
+              href="tel:0345412152"
+              style={{
+                borderRadius: 20,
+                fontWeight: 600,
+                fontSize: 13,
+                borderColor: "#2b4836",
+                color: "#2b4836",
+              }}
+            >
+              0345 412 152
+            </Button>
 
+            <Button
+              type="default"
+              icon={<PhoneOutlined />}
+              href="tel:0375033487"
+              style={{
+                borderRadius: 20,
+                fontWeight: 600,
+                fontSize: 13,
+                borderColor: "#2b4836",
+                color: "#2b4836",
+              }}
+            >
+              0375 033 487
+            </Button>
+          </Space>
           {user ? (
             <Dropdown
               trigger={["click"]}
@@ -214,98 +261,18 @@ export default function POS() {
           )}
         </div>
       </header>
-      <section className="lp-hero lp-hero-full-width">
-        <div className="hero-container">
-          <div className="lp-hero-grid">
-            <div className="lp-hero-left">
-              <div className="lp-hero-tag">
-                <span className="pill-dot">●</span> THẢM XI MĂNG VIỆT NAM — BÊ
-                TÔNG CUỘN
-              </div>
-              <h1 className="lp-hero-title">
-                BẢNG GIÁ <br />
-                <span className="text-mint">BÊ TÔNG</span> <br />
-                <span className="text-mint">CUỘN</span>
-              </h1>
-              <p className="lp-hero-desc">
-                Công nghệ bê tông cuộn — thi công theo độ dày và diện tích.{" "}
-                <br />
-                Bán sỉ tối thiểu <strong>200m²</strong>. Công trình lớn hỗ trợ
-                thi công.
-              </p>
-
-              <div className="lp-hero-stats">
-                <div className="stat-block">
-                  <strong>68.000đ</strong>
-                  <span>/m² giá bán buôn</span>
-                </div>
-                <div className="stat-block">
-                  <strong>200m²</strong>
-                  <span>bán sỉ tối thiểu</span>
-                </div>
-                <div className="stat-block">
-                  <strong>8–10 năm</strong>
-                  <span>độ bền ước tính</span>
-                </div>
-              </div>
-
-              <div className="lp-hero-btns">
-                <button
-                  type="button"
-                  className="btn-lp-primary"
-                  onClick={() => handleOpenOrder("10mm", 200)}
-                >
-                  Đặt hàng ngay
-                </button>
-                <a href="#bang-gia" className="btn-lp-secondary">
-                  Xem bảng giá
-                </a>
-              </div>
-            </div>
-
-            <div className="lp-hero-right">
-              <div className="lp-commitment-box">
-                <h3 className="commitment-title">CAM KẾT CỦA CHÚNG TÔI</h3>
-                <ul className="commitment-ul">
-                  <li>
-                    <span className="chk">•</span> Giá xuất xưởng cho công trình
-                    diện tích lớn.
-                  </li>
-                  <li>
-                    <span className="chk">•</span> Bán sỉ tối thiểu 200m².
-                  </li>
-                  <li>
-                    <span className="chk">•</span> Độ bền khoảng 8–10 năm.
-                  </li>
-                  <li>
-                    <span className="chk">•</span> Công trình trên 5.000m² được
-                    hỗ trợ thi công.
-                  </li>
-                </ul>
-                <div className="commitment-hotline">
-                  <span className="lbl">Hotline / Zalo:</span>
-                  <a href="tel:0979749602" className="val">
-                    0979 749 602
-                  </a>
-                  <span className="fb-text">
-                    Facebook: Thảm xi măng Việt Nam
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection onOpenOrder={handleOpenOrder} />
       <div className="lp-marquee-bar lp-marquee-full-width">
         <div className="marquee-track">
-          <span>🚚 GIAO HÀNG TOÀN QUỐC</span>
-          <span>📦 BÁN SỈ TỐI THIỂU 200M²</span>
-          <span>💰 GIÁ TỐT NHẤT THỊ TRƯỜNG</span>
-          <span>✅ BÊ TÔNG CUỘN CHÍNH HÃNG</span>
+          <span>SẢN XUẤT TẠI VIỆT NAM — CÔNG NGHỆ TIÊN TIẾN TỪ NƯỚC NGOÀI</span>
+          <span>Đồng Hành Cùng Mọi Công Trình ›</span>
         </div>
       </div>
-      {/* <PricingTable /> */}
-      <PricingCards onOpenOrder={handleOpenOrder} />
+
+      <AboutSection />
+      <StructureSection />
+      <ProcessSection />
+      <SpecsSection />
 
       <FastCalculator
         selectedThickness={selectedThickness}
@@ -314,18 +281,25 @@ export default function POS() {
         setArea={setArea}
         onOpenOrder={handleOpenOrder}
       />
+      <PricingCards onOpenOrder={handleOpenOrder} />
+
       {/* </Content> */}
       <AdvantagesSection />
       <ContactSection />
 
       {/* Modal Đặt Hàng */}
       <Modal
+        className="pops-order-modal"
         title={`Đặt hàng Bê tông cuộn ${orderModal?.thickness}`}
         width={900}
         open={!!orderModal}
         onCancel={() => setOrderModal(null)}
         onOk={() => form.submit()}
         confirmLoading={isSubmittingOrder}
+        cancelButtonProps={{
+          danger: true,
+          className: "pops-cancel-button",
+        }}
         okText="Xác nhận tạo đơn"
         cancelText="Hủy"
       >
@@ -345,7 +319,12 @@ export default function POS() {
               </h3>
               <strong>{vnd(orderModal.item.unitPrice || orderPrice)}</strong>
               {orderModal.item.description && (
-                <p>{orderModal.item.description}</p>
+                <div
+                  className="order-modal-product-description"
+                  dangerouslySetInnerHTML={{
+                    __html: orderModal.item.description,
+                  }}
+                />
               )}
             </div>
             <div className="order-modal-form">
@@ -418,19 +397,17 @@ export default function POS() {
         >
           {/* Cột 1: Logo & Tên thương hiệu */}
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
+            <img
+              src="/dist/img/logo.jpg"
+              alt="Thảm Bê Tông Việt Nam logo"
               style={{
-                backgroundColor: "#3a6048",
-                color: "#ffffff",
-                fontWeight: 800,
-                fontSize: 13,
-                padding: "6px 8px",
-                borderRadius: 6,
-                lineHeight: 1,
+                width: 36,
+                height: 36,
+                objectFit: "cover",
+                borderRadius: 8,
+                display: "block",
               }}
-            >
-              TXM
-            </div>
+            />
             <div>
               <div
                 style={{
@@ -440,7 +417,7 @@ export default function POS() {
                   color: "#ffffff",
                 }}
               >
-                THẢM XI MĂNG VIỆT NAM
+                THẢM BÊ TÔNG VIỆT NAM
               </div>
               <div style={{ fontSize: 12, color: "#8b9b90", marginTop: 2 }}>
                 Bê tông cuộn chuyên nghiệp
@@ -452,22 +429,21 @@ export default function POS() {
           <div style={{ fontSize: 13, color: "#a3b2a7", textAlign: "center" }}>
             Hotline / Zalo:{" "}
             <a
-              href="tel:0979749602"
               style={{
                 color: "#ffffff",
                 fontWeight: 700,
                 textDecoration: "none",
               }}
             >
-              0979 749 602
+              0345 412 152 - 0375 033 487
             </a>{" "}
             • Facebook:{" "}
-            <span style={{ color: "#a3b2a7" }}>Thảm xi măng Việt Nam</span>
+            <span style={{ color: "#a3b2a7" }}>Thảm Bê Tông Việt Nam</span>
           </div>
 
           {/* Cột 3: Bản quyền */}
           <div style={{ fontSize: 13, color: "#8b9b90" }}>
-            © {new Date().getFullYear()} Thảm Xi Măng Việt Nam
+            © {new Date().getFullYear()} Thảm Bê Tông Việt Nam
           </div>
         </div>
       </Footer>

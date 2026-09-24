@@ -34,17 +34,18 @@ export default function FastCalculator({
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: "#52c41a", // Màu xanh lá sáng cho Slider & Active Button
+          colorPrimary: "#DF8A0F",
         },
       }}
     >
       <div
+        className="pops-fast-calculator"
         style={{
-          backgroundColor: "#19281e", // Nền xanh đen đậm của Card
           borderRadius: 16,
+          margin: "0 30px 20px",
           padding: "28px 32px",
           color: "#fff",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+          boxShadow: "0 10px 30px rgba(15, 15, 15, 0.15)",
         }}
       >
         {/* Header */}
@@ -60,6 +61,7 @@ export default function FastCalculator({
 
         {/* Form Controls */}
         <Flex
+          className="pops-fast-calculator-controls"
           justify="space-between"
           align="flex-start"
           gap={32}
@@ -85,7 +87,7 @@ export default function FastCalculator({
               onChange={(e) => setSelectedThickness(e.target.value)}
               buttonStyle="solid"
             >
-              <Flex gap={8}>
+              <Flex className="pops-thickness-options" gap={8} wrap>
                 {PRICING_TABLE.map((item) => (
                   <Radio.Button
                     key={item.thickness}
@@ -159,7 +161,13 @@ export default function FastCalculator({
             marginBottom: 16,
           }}
         >
-          <Flex justify="space-between" align="center" wrap="wrap" gap={16}>
+          <Flex
+            className="pops-fast-calculator-result"
+            justify="space-between"
+            align="center"
+            wrap="wrap"
+            gap={16}
+          >
             <div>
               <Text
                 style={{ color: "#7a9382", fontSize: 13, display: "block" }}

@@ -10,9 +10,9 @@ const links = [
   { to: "/san-pham", label: "Sản phẩm", ico: "▣" },
   { to: "/don-hang", label: "Đơn hàng", ico: "▤" },
   { to: "/khach-hang", label: "Khách hàng", ico: "☺" },
-  { to: "/ton-kho", label: "Tồn kho", ico: "▦" },
-  { to: "/bao-cao", label: "Báo cáo", ico: "↗" },
-  { to: "/cai-dat", label: "Cài đặt", ico: "⚙" },
+  // { to: "/ton-kho", label: "Tồn kho", ico: "▦" },
+  // { to: "/bao-cao", label: "Báo cáo", ico: "↗" },
+  // { to: "/cai-dat", label: "Cài đặt", ico: "⚙" },
 ];
 
 export default function Layout() {
@@ -25,9 +25,8 @@ export default function Layout() {
 
   const handleLogout = () => {
     logout();
-    nav("/login");
+    nav("/");
   };
-
   const searchGo = (e) => {
     e.preventDefault();
     const query = q.trim();
@@ -42,10 +41,20 @@ export default function Layout() {
     <div className="app">
       <aside className={`sidebar ${open ? "open" : ""}`}>
         <div className="brand">
-          <div className="brand-mark">CH</div>
+          <img
+            src="/dist/img/logo.jpg"
+            alt="Brand logo"
+            style={{
+              width: 36,
+              height: 36,
+              objectFit: "cover",
+              borderRadius: 10,
+              display: "block",
+            }}
+          />
           <div>
             <div className="brand-name">{settings.shopName}</div>
-            <div className="brand-sub">Quản lý bán lẻ</div>
+            <div className="brand-sub">Thảm Bê Tông Việt Nam</div>
           </div>
         </div>
         <nav className="nav" onClick={() => setOpen(false)}>
@@ -78,11 +87,11 @@ export default function Layout() {
                     "Tài khoản"}
                 </div>
                 <div className="user-role-badge">
-                  {user?.role === "admin"
+                  {user?.role === "ROLE_ADMIN"
                     ? "Quản trị viên"
-                    : user?.role === "inventory"
-                      ? "Thủ kho"
-                      : "Thu ngân"}
+                    : user?.role === "ROLE_CUSTOMER"
+                      ? "Nhân viên"
+                      : "Nhân viên"}
                 </div>
               </div>
             </div>

@@ -31,6 +31,18 @@ const pageParams = (params = {}) => ({
   size: params.size ?? 100,
 });
 
+export const pageResult = (value) => {
+  const payload = Array.isArray(value?.data) ? value : (value?.data ?? value);
+  const items = Array.isArray(payload)
+    ? payload
+    : payload?.data || payload?.items || payload?.results || [];
+  const total = Number(
+    payload?.totalElements ?? payload?.total ?? payload?.count ?? items.length,
+  );
+
+  return { items, total };
+};
+
 export const authApi = {
   login: (credentials) => api.post("/auth/login", credentials),
   register: (userData) => api.post("/auth/register", userData),
