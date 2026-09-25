@@ -53,7 +53,7 @@ export default function FastCalculator({
           <span style={{ fontSize: 20 }}>🧮</span>
           <Title
             level={4}
-            style={{ color: "#fff", margin: 0, fontWeight: 700 }}
+            style={{ color: "#000000", margin: 0, fontWeight: 700 }}
           >
             Tính giá nhanh
           </Title>
@@ -72,7 +72,7 @@ export default function FastCalculator({
           <div style={{ flex: 1, minWidth: 280 }}>
             <Text
               style={{
-                color: "#7a9382",
+                color: "#121312",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 0.5,
@@ -125,7 +125,7 @@ export default function FastCalculator({
             >
               <Text
                 style={{
-                  color: "#7a9382",
+                  color: "#000000",
                   fontSize: 12,
                   fontWeight: 600,
                   letterSpacing: 0.5,
@@ -133,7 +133,7 @@ export default function FastCalculator({
               >
                 DIỆN TÍCH – TỐI THIỂU 200M²
               </Text>
-              <Text style={{ color: "#52c41a", fontWeight: 700, fontSize: 18 }}>
+              <Text style={{ color: "#000000", fontWeight: 700, fontSize: 18 }}>
                 {area} <span style={{ fontSize: 13 }}>m²</span>
               </Text>
             </Flex>
@@ -169,9 +169,7 @@ export default function FastCalculator({
             gap={16}
           >
             <div>
-              <Text
-                style={{ color: "#7a9382", fontSize: 13, display: "block" }}
-              >
+              <Text style={{ color: "#ffff", fontSize: 13, display: "block" }}>
                 Đơn giá ({tierText})
               </Text>
               <Text style={{ color: "#fff", fontSize: 22, fontWeight: 700 }}>
@@ -185,23 +183,19 @@ export default function FastCalculator({
             </div>
 
             <div>
-              <Text
-                style={{ color: "#7a9382", fontSize: 13, display: "block" }}
-              >
+              <Text style={{ color: "#ffff", fontSize: 13, display: "block" }}>
                 Mức giá áp dụng
               </Text>
-              <Text style={{ color: "#52c41a", fontSize: 15, fontWeight: 600 }}>
+              <Text style={{ color: "#ffff", fontSize: 15, fontWeight: 600 }}>
                 {tierText}
               </Text>
             </div>
 
             <div>
-              <Text
-                style={{ color: "#7a9382", fontSize: 13, display: "block" }}
-              >
+              <Text style={{ color: "#ffff", fontSize: 13, display: "block" }}>
                 Thành tiền
               </Text>
-              <Text style={{ color: "#52c41a", fontSize: 22, fontWeight: 700 }}>
+              <Text style={{ color: "#ffff", fontSize: 22, fontWeight: 700 }}>
                 {vnd(calculatedTotal)}
               </Text>
             </div>
@@ -211,7 +205,7 @@ export default function FastCalculator({
         {/* Note */}
         <Text
           style={{
-            color: "#5f7867",
+            color: "#000000",
             fontSize: 12,
             textAlign: "center",
             display: "block",

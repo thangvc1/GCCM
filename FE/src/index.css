@@ -2297,7 +2297,10 @@ tr:hover td {
 }
 
 .pops-process-section {
-  background: linear-gradient(180deg, #0d2353 0%, #102d6a 100%);
+  background:
+    linear-gradient(90deg, rgb(167 185 239 / 98%), rgba(28, 59, 145, 0.9)),
+    url("https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=2200&q=85")
+      center/cover no-repeat;
   max-width: none;
   padding: 34px 24px 50px;
   margin-top: 30px;
@@ -4191,7 +4194,7 @@ button.btn-primary:hover,
   padding: 108px 24px 80px;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(26, 52, 128, 0.98), rgba(28, 59, 145, 0.9)),
+    linear-gradient(90deg, rgb(167 185 239 / 98%), rgba(28, 59, 145, 0.9)),
     url("https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=2200&q=85")
       center/cover no-repeat;
 }
@@ -4199,7 +4202,7 @@ button.btn-primary:hover,
 .pops-page .pops-fast-calculator {
   margin: 0 30px 20px;
   background:
-    linear-gradient(90deg, rgba(26, 52, 128, 0.98), rgba(28, 59, 145, 0.9)),
+    linear-gradient(90deg, rgb(167 185 239 / 98%), rgba(28, 59, 145, 0.9)),
     url("https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=2200&q=85")
       center/cover no-repeat;
 }
