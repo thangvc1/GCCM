@@ -16,7 +16,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         token: {
           colorPrimary: "#DF8A0F",
           borderRadius: 12,
-          fontFamily: "'Be Vietnam Pro', system-ui, sans-serif",
+          fontFamily: "'Open Sans', system-ui, sans-serif",
         },
       }}
     >
