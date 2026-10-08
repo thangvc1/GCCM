@@ -27,6 +27,7 @@ api.interceptors.response.use(
 );
 
 const pageParams = (params = {}) => ({
+  ...params,
   page: params.page ?? 1,
   size: params.size ?? 100,
 });
@@ -46,7 +47,7 @@ export const pageResult = (value) => {
 export const authApi = {
   login: (credentials) => api.post("/auth/login", credentials),
   register: (userData) => api.post("/auth/register", userData),
-  getMe: () => api.get("/admin/auth/me"),
+  getMe: () => api.get("/auth/me"),
 };
 
 export const storeApi = {

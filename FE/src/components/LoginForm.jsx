@@ -18,27 +18,52 @@ export default function LoginForm({ onSubmit, onSwitchToRegister }) {
       <Form.Item
         label="Tên đăng nhập"
         name="username"
-        rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập" }]}
+        rules={[
+          {
+            required: true,
+            whitespace: true,
+            message: "Vui lòng nhập tên đăng nhập",
+          },
+        ]}
       >
-        <Input placeholder="Nhập tên đăng nhập" disabled={isSubmitting} size="large" />
+        <Input
+          placeholder="Nhập tên đăng nhập"
+          disabled={isSubmitting}
+          size="large"
+        />
       </Form.Item>
       <Form.Item
         label="Mật khẩu"
         name="password"
         rules={[
-          { required: true, message: "Vui lòng nhập mật khẩu" },
-          { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+          {
+            required: true,
+            whitespace: true,
+            message: "Vui lòng nhập mật khẩu",
+          },
         ]}
       >
-        <Input.Password placeholder="Nhập mật khẩu" disabled={isSubmitting} size="large" />
+        <Input.Password
+          placeholder="Nhập mật khẩu"
+          disabled={isSubmitting}
+          size="large"
+        />
       </Form.Item>
-      <Button type="primary" htmlType="submit" block size="large" loading={isSubmitting}>
+      <Button
+        type="primary"
+        htmlType="submit"
+        block
+        size="large"
+        loading={isSubmitting}
+      >
         Đăng nhập
       </Button>
       {onSwitchToRegister && (
         <p className="auth-switch">
           Chưa có tài khoản?{" "}
-          <Button type="link" onClick={onSwitchToRegister}>Đăng ký ngay</Button>
+          <Button type="link" onClick={onSwitchToRegister}>
+            Đăng ký ngay
+          </Button>
         </p>
       )}
     </Form>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pagination } from "antd";
+import { Pagination, Select } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { pageResult, storeApi } from "../api.js";
 import { useStore } from "../store/StoreContext.jsx";
 import { uid } from "../lib/format.js";
@@ -15,25 +16,40 @@ export default function Customers() {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState("Tất cả");
   const [form, setForm] = useState(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+      setPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [q]);
+
   const loadCustomers = async () => {
-    const result = pageResult(await storeApi.getCustomers({ page, size }));
+    const result = pageResult(
+      await storeApi.getCustomers({
+        page,
+        size,
+        keyword: debouncedQ || undefined,
+        status:
+          statusFilter === "Tất cả"
+            ? undefined
+            : statusFilter === "Hoạt động"
+              ? 1
+              : 0,
+      }),
+    );
     setCustomers(result.items);
     setTotal(result.total);
   };
 
   useEffect(() => {
     loadCustomers();
-  }, [page, size]);
-
-  const list = useMemo(
-    () =>
-      customers.filter((c) =>
-        `${c.name} ${c.phone}`.toLowerCase().includes(q.toLowerCase()),
-      ),
-    [customers, q],
-  );
+  }, [page, size, debouncedQ, statusFilter]);
 
   const spent = (id) =>
     orders
@@ -62,12 +78,27 @@ export default function Customers() {
           + Thêm khách
         </button>
       </div>
-      <div className="filters">
-        <input
-          className="search"
+      <div
+        className="filters"
+        style={{ display: "flex", gap: 12, flexWrap: "wrap" }}
+      >
+        <Input
+          prefix={<SearchOutlined style={{ color: "#999" }} />}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Tên, SĐT"
+          placeholder="Tìm theo tên, SĐT, ghi chú..."
+          style={{ maxWidth: 300 }}
+          allowClear
+        />
+        <Select
+          value={statusFilter}
+          onChange={setStatusFilter}
+          style={{ width: 180 }}
+          options={[
+            { value: "Tất cả", label: "Tất cả trạng thái" },
+            { value: "Hoạt động", label: "Hoạt động" },
+            { value: "Ngừng hoạt động", label: "Ngừng hoạt động" },
+          ]}
         />
       </div>
       <div className="card table-wrap">
@@ -82,7 +113,7 @@ export default function Customers() {
             </tr>
           </thead>
           <tbody>
-            {list.map((c) => (
+            {customers.map((c) => (
               <tr key={c.id}>
                 <td>{c.name}</td>
                 <td>{c.phone || "—"}</td>

@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
 import { useStore } from "../store/StoreContext.jsx";
 import { isSameDay, num, vnd } from "../lib/format.js";
+import { useAuth } from "../store/AuthContext.jsx";
 
 export default function Dashboard() {
   const { products, orders, customers, settings } = useStore();
+  const { user } = useAuth();
+
   const done = orders.filter((o) => o.status !== "đã hủy");
   const todayOrders = done.filter((o) => isSameDay(o.at));
   const todayRev = todayOrders.reduce((s, o) => s + o.total, 0);
@@ -36,7 +39,10 @@ export default function Dashboard() {
     <div>
       <div className="page-head">
         <div>
-          <h1>Xin chào, {settings.shopName}</h1>
+          <h1>
+            Xin chào,{" "}
+            {user?.fullName || user?.name || user?.username || "Tài khoản"}
+          </h1>
           <p className="sub">Theo dõi bán hàng, tồn kho và khách trong ngày.</p>
         </div>
       </div>

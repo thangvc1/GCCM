@@ -122,13 +122,7 @@ export default function Layout() {
           >
             ☰
           </button>
-          <form className="search-wrap" onSubmit={searchGo}>
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm sản phẩm rồi Enter…"
-            />
-          </form>
+          <div style={{ flex: 1 }} />
           <div className="top-actions">
             <NotificationBell />
             <span className={`pill ${low ? "" : "ok"}`}>

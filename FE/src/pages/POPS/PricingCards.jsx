@@ -93,7 +93,7 @@ export default function PricingCards({ onOpenOrder }) {
           {pageItems.map((item) => (
             <Card
               onClick={() =>
-                onOpenOrder?.(`${item.thicknessMm || ""}mm`, 200, item)
+                onOpenOrder?.(`${item.thicknessMm || ""}mm`, 100, item)
               }
               key={item.id}
               className="pops-product-card"
@@ -115,7 +115,7 @@ export default function PricingCards({ onOpenOrder }) {
                   type="primary"
                   block
                   onClick={() =>
-                    onOpenOrder?.(`${item.thicknessMm || ""}mm`, 200, item)
+                    onOpenOrder?.(`${item.thicknessMm || ""}mm`, 100, item)
                   }
                 >
                   Đặt hàng

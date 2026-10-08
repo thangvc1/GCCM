@@ -1,10 +1,41 @@
 import { ArrowRightOutlined } from "@ant-design/icons";
-import { Button, ConfigProvider, Flex, Radio, Slider, Typography } from "antd";
-import { useMemo } from "react";
+import {
+  Button,
+  ConfigProvider,
+  Empty,
+  Flex,
+  Radio,
+  Slider,
+  Spin,
+  Typography,
+  message,
+} from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { publicApi } from "../../api.js";
 import { vnd } from "../../lib/format.js";
-import { PRICING_TABLE } from "./fakedata.js";
+import { discountLabelForArea, discountRateForArea } from "./pricing.js";
 
 const { Text, Title } = Typography;
+const productImage = (product) =>
+  product?.imageUrl ||
+  product?.image ||
+  product?.imagePath ||
+  product?.thumbnailUrl;
+const productThickness = (product) =>
+  product?.thicknessMm || product?.thickness || product?.thicknessMM;
+const thicknessValue = (product) => {
+  const value = Number.parseFloat(String(productThickness(product) || ""));
+  return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
+};
+const thicknessLabel = (product) => {
+  const thickness = productThickness(product);
+  if (!thickness) return "";
+  return String(thickness).endsWith("mm")
+    ? String(thickness)
+    : `${thickness}mm`;
+};
+const productPrice = (product) =>
+  Number(product?.unitPrice || product?.price || product?.basePrice || 0);
 
 export default function FastCalculator({
   selectedThickness,
@@ -13,22 +44,71 @@ export default function FastCalculator({
   setArea,
   onOpenOrder,
 }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    publicApi
+      .getProducts({ page: 1, size: 100 })
+      .then((response) => {
+        const data = response?.data?.data ?? response?.data ?? response;
+        const items = Array.isArray(data)
+          ? data
+          : data?.items || data?.content || data?.results || [];
+        if (active) {
+          setProducts(
+            [...items].sort(
+              (first, second) => thicknessValue(first) - thicknessValue(second),
+            ),
+          );
+        }
+      })
+      .catch((error) => {
+        if (active) message.error(error?.message || "Không thể tải sản phẩm");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const currentItem = useMemo(
     () =>
-      PRICING_TABLE.find((p) => p.thickness === selectedThickness) ||
-      PRICING_TABLE[2],
-    [selectedThickness],
+      products.find(
+        (product) => thicknessLabel(product) === selectedThickness,
+      ) || products[0],
+    [products, selectedThickness],
   );
 
-  const { unitPrice, tierText } = useMemo(() => {
-    if (area < 500)
-      return { unitPrice: currentItem.p200_500, tierText: "Dưới 500m²" };
-    if (area <= 1000)
-      return { unitPrice: currentItem.p500_1000, tierText: "500m² - 1.000m²" };
-    return { unitPrice: currentItem.pAbove1000, tierText: "Trên 1.000m²" };
-  }, [area, currentItem]);
+  useEffect(() => {
+    if (currentItem && thicknessLabel(currentItem) !== selectedThickness) {
+      setSelectedThickness(thicknessLabel(currentItem));
+    }
+  }, [currentItem, selectedThickness, setSelectedThickness]);
 
-  const calculatedTotal = unitPrice * area;
+  const baseUnitPrice = productPrice(currentItem);
+  const discountRate = discountRateForArea(area);
+  const unitPrice = baseUnitPrice * (1 - discountRate);
+  const tierText = discountLabelForArea(area);
+
+  const calculatedTotal = unitPrice * Number(area);
+
+  if (loading) {
+    return (
+      <Flex justify="center" style={{ padding: 40 }}>
+        <Spin />
+      </Flex>
+    );
+  }
+
+  if (!products.length) {
+    return <Empty description="Chưa có sản phẩm để tính giá" />;
+  }
 
   return (
     <ConfigProvider
@@ -46,6 +126,11 @@ export default function FastCalculator({
           padding: "28px 32px",
           color: "#fff",
           boxShadow: "0 10px 30px rgba(15, 15, 15, 0.15)",
+          backgroundImage: productImage(currentItem)
+            ? `linear-gradient(90deg, rgb(167 185 239 / 98%), rgba(28, 59, 145, 0.9)), url("${productImage(currentItem)}")`
+            : undefined,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
         }}
       >
         {/* Header */}
@@ -88,17 +173,17 @@ export default function FastCalculator({
               buttonStyle="solid"
             >
               <Flex className="pops-thickness-options" gap={8} wrap>
-                {PRICING_TABLE.map((item) => (
+                {products.map((item) => (
                   <Radio.Button
-                    key={item.thickness}
-                    value={item.thickness}
+                    key={item.id || thicknessLabel(item)}
+                    value={thicknessLabel(item)}
                     style={{
                       backgroundColor:
-                        selectedThickness === item.thickness
+                        selectedThickness === thicknessLabel(item)
                           ? "#528e6d"
                           : "#23372a",
                       color:
-                        selectedThickness === item.thickness
+                        selectedThickness === thicknessLabel(item)
                           ? "#fff"
                           : "#8fa395",
                       border: "none",
@@ -109,7 +194,7 @@ export default function FastCalculator({
                       padding: "0 16px",
                     }}
                   >
-                    {item.thickness}
+                    {thicknessLabel(item)}
                   </Radio.Button>
                 ))}
               </Flex>
@@ -131,14 +216,14 @@ export default function FastCalculator({
                   letterSpacing: 0.5,
                 }}
               >
-                DIỆN TÍCH – TỐI THIỂU 200M²
+                DIỆN TÍCH – TỐI THIỂU 100M²
               </Text>
               <Text style={{ color: "#000000", fontWeight: 700, fontSize: 18 }}>
                 {area} <span style={{ fontSize: 13 }}>m²</span>
               </Text>
             </Flex>
             <Slider
-              min={200}
+              min={100}
               max={3000}
               step={50}
               value={area}
@@ -155,7 +240,7 @@ export default function FastCalculator({
         {/* Result Display Box */}
         <div
           style={{
-            backgroundColor: "#131f18",
+            backgroundColor: "#145a62",
             borderRadius: 12,
             padding: "20px 28px",
             marginBottom: 16,
@@ -218,7 +303,7 @@ export default function FastCalculator({
             type="primary"
             size="large"
             icon={<ArrowRightOutlined />}
-            onClick={() => onOpenOrder(selectedThickness, area)}
+            onClick={() => onOpenOrder(selectedThickness, area, currentItem)}
             style={{
               width: 220, // Đặt độ rộng vừa phải cho nút (có thể tăng/giảm tùy ý)
               fontWeight: 600,
