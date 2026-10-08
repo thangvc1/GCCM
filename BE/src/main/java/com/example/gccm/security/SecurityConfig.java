@@ -48,7 +48,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. Mở CÁC API CÔNG KHAI và WEBSOCKET
                         // Bổ sung "/ws/**" vào đây để cho phép WebSocket handshake
-                        .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**", "/ws/**").permitAll()
+                        // .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**", "/ws/**").permitAll()
+                        .requestMatchers("/api/v1/public/**", "/ws/**").permitAll()
 
                         // 2. Mở CỤ THỂ Login, Register VÀ trang test HTML
                         .requestMatchers(MappingConstants.API_AUTH_PREFIX + "/login",
