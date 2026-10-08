@@ -59,16 +59,35 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const savedUser = localStorage.getItem(USER_KEY);
-      const userData =
-        (savedUser && normalizeUser(JSON.parse(savedUser))) ||
-        decodeTokenUser(currentToken);
-      if (userData) {
+      const meResponse = await authApi.getMe();
+      const userData = normalizeUser(meResponse?.user || meResponse);
+
+      if (userData?.username) {
         setUser(userData);
         localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      } else {
+        const savedUser = localStorage.getItem(USER_KEY);
+        const fallbackUser =
+          (savedUser && normalizeUser(JSON.parse(savedUser))) ||
+          decodeTokenUser(currentToken);
+
+        if (fallbackUser) {
+          setUser(fallbackUser);
+          localStorage.setItem(USER_KEY, JSON.stringify(fallbackUser));
+        }
       }
     } catch {
-      setIsLoading(false);
+      const savedUser = localStorage.getItem(USER_KEY);
+      const fallbackUser =
+        (savedUser && normalizeUser(JSON.parse(savedUser))) ||
+        decodeTokenUser(currentToken);
+
+      if (fallbackUser) {
+        setUser(fallbackUser);
+        localStorage.setItem(USER_KEY, JSON.stringify(fallbackUser));
+      } else {
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -82,11 +101,22 @@ export function AuthProvider({ children }) {
     try {
       const response = await authApi.login(credentials);
       const receivedToken = response?.token || response?.accessToken;
-      const receivedUser = normalizeUser(response);
 
       if (receivedToken) {
         tokenStorage.set(receivedToken);
         setToken(receivedToken);
+      }
+
+      let receivedUser = normalizeUser(response);
+
+      try {
+        const meResponse = await authApi.getMe();
+        const meUser = normalizeUser(meResponse?.user || meResponse || {});
+        if (meUser?.username) {
+          receivedUser = meUser;
+        }
+      } catch {
+        // ignore /me failure and fall back to login payload
       }
 
       if (receivedUser?.username) {

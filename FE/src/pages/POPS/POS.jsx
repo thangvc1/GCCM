@@ -27,6 +27,7 @@ import ProcessSection from "./ProcessSection";
 import SpecsSection from "./SpecsSection";
 import StructureSection from "./StructureSection";
 import { PRICING_TABLE } from "./fakedata";
+import { discountRateForArea } from "./pricing";
 
 const { Header, Content, Footer } = Layout;
 const productImage = (product) =>
@@ -44,13 +45,13 @@ const productPrice = (product) =>
 export default function POS() {
   const { user, logout } = useAuth();
   const [selectedThickness, setSelectedThickness] = useState("10mm");
-  const [area, setArea] = useState(200);
+  const [area, setArea] = useState(100);
   const [orderModal, setOrderModal] = useState(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [form] = Form.useForm();
-  const orderArea = Form.useWatch("area", form) || orderModal?.area || 200;
+  const orderArea = Form.useWatch("area", form) || orderModal?.area || 100;
   const orderPayMethod = Form.useWatch("payMethod", form) || "Chuyển khoản";
-  const orderPrice = orderModal
+  const baseOrderPrice = orderModal
     ? orderModal.item.unitPrice || orderModal.item.price
       ? productPrice(orderModal.item)
       : orderArea >= 1000
@@ -59,15 +60,20 @@ export default function POS() {
           ? orderModal.item.p500_1000
           : orderModal.item.p200_500
     : 0;
+  const orderPrice = baseOrderPrice * (1 - discountRateForArea(orderArea));
   const orderTotal = Number(orderArea) * orderPrice;
   const paymentDue =
     orderPayMethod === "Chuyển khoản" ? orderTotal * 0.5 : orderTotal;
 
-  const handleOpenOrder = (thicknessStr, defaultArea = 200, product) => {
+  const handleOpenOrder = (thicknessStr, defaultArea = 100, product) => {
     const item =
       product ||
       PRICING_TABLE.find((p) => p.thickness === thicknessStr) ||
       PRICING_TABLE[2];
+    const defaultCustomerName = user?.fullName || user?.username || "";
+    const defaultPhone = user?.phone || "";
+    const defaultAddress = user?.address || "";
+
     setOrderModal({
       thickness: productThickness(item)
         ? `${productThickness(item)}mm`
@@ -75,7 +81,13 @@ export default function POS() {
       item,
       area: defaultArea,
     });
-    form.setFieldsValue({ area: defaultArea, payMethod: "Chuyển khoản" });
+    form.setFieldsValue({
+      area: defaultArea,
+      payMethod: "Chuyển khoản",
+      customerName: defaultCustomerName,
+      phone: defaultPhone,
+      address: defaultAddress,
+    });
   };
 
   const handleConfirmOrder = async (values) => {
@@ -193,14 +205,6 @@ export default function POS() {
                     </div>
                   </div>
                   <div className="pops-user-details">
-                    <div>
-                      <span>Vai trò</span>
-                      <strong>
-                        {user.role === "ROLE_ADMIN"
-                          ? "Quản trị viên"
-                          : "Khách hàng"}
-                      </strong>
-                    </div>
                     {user.phone && (
                       <div>
                         <span>Số điện thoại</span>
@@ -344,7 +348,7 @@ export default function POS() {
                   <Input placeholder="09xx xxx xxx" />
                 </Form.Item>
                 <Form.Item name="area" label="Diện tích (m²)">
-                  <InputNumber min={200} style={{ width: "100%" }} />
+                  <InputNumber min={100} style={{ width: "100%" }} />
                 </Form.Item>
                 <div className="order-payment-summary">
                   <div>
@@ -363,14 +367,14 @@ export default function POS() {
                 <Form.Item name="address" label="Địa chỉ giao hàng">
                   <Input placeholder="Số nhà, Xã, Tỉnh..." />
                 </Form.Item>
-                <Form.Item name="payMethod" label="Phương thức thanh toán">
+                {/* <Form.Item name="payMethod" label="Phương thức thanh toán">
                   <Select>
                     <Select.Option value="Chuyển khoản">
                       Chuyển khoản cọc 50%
                     </Select.Option>
                     <Select.Option value="Chờ tư vấn">Chờ tư vấn</Select.Option>
                   </Select>
-                </Form.Item>
+                </Form.Item> */}
               </Form>
             </div>
           </div>

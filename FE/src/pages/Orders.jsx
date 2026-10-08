@@ -50,6 +50,11 @@ const toOrderFromNotification = (notification) => {
     receiverName: payload?.receiverName ?? "",
     receiverPhone: payload?.receiverPhone ?? "",
     payMethod: payload?.payMethod ?? payload?.paymentMethod ?? "Chuyển khoản",
+    status:
+      payload?.status ??
+      payload?.orderStatus ??
+      notification?.status ??
+      (payload?.canceled || payload?.isCanceled ? "đã hủy" : "hoàn tất"),
     total: Number(payload?.totalPrice || 0),
     at:
       payload?.createdAt ??
@@ -69,18 +74,35 @@ export default function Orders() {
   const [size, setSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [status, setStatus] = useState("Tất cả");
   const [viewingOrder, setViewingOrder] = useState(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+      setPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [q]);
+
   const loadOrders = async () => {
-    const result = pageResult(await storeApi.getOrders({ page, size }));
+    const result = pageResult(
+      await storeApi.getOrders({
+        page,
+        size,
+        keyword: debouncedQ || undefined,
+        status: status === "Tất cả" ? undefined : status,
+      }),
+    );
     setNotifications(result.items);
     setTotal(result.total);
   };
 
   useEffect(() => {
     loadOrders();
-  }, [page, size]);
+  }, [page, size, debouncedQ, status]);
 
   const orderList = useMemo(
     () =>
@@ -90,18 +112,6 @@ export default function Orders() {
             .filter((item) => item && (item.code || item.customerName))
         : [],
     [notifications],
-  );
-
-  const filteredOrders = useMemo(
-    () =>
-      orderList.filter((o) => {
-        const okStatus = status === "Tất cả" || o.status === status;
-        const okQuery = `${o.code} ${o.customerName}`
-          .toLowerCase()
-          .includes(q.toLowerCase());
-        return okStatus && okQuery;
-      }),
-    [orderList, q, status],
   );
 
   const handleCancelOrder = (id) => {
@@ -239,7 +249,7 @@ export default function Orders() {
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <Table
           columns={columns}
-          dataSource={filteredOrders}
+          dataSource={orderList}
           rowKey="id"
           pagination={{
             current: page,

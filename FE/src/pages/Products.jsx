@@ -40,6 +40,7 @@ export default function Products() {
   const { saveProduct } = useStore();
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
+  const [debouncedQ, setDebouncedQ] = useState(params.get("q") || "");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,9 +55,23 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+      setCurrentPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [q]);
+
   const loadProducts = async () => {
     const result = pageResult(
-      await storeApi.getProducts({ page: currentPage, size: pageSize }),
+      await storeApi.getProducts({
+        page: currentPage,
+        size: pageSize,
+        keyword: debouncedQ || undefined,
+        status: statusFilter === "ALL" ? undefined : Number(statusFilter),
+      }),
     );
     setProducts(result.items);
     setTotal(result.total);
@@ -64,18 +79,7 @@ export default function Products() {
 
   useEffect(() => {
     loadProducts();
-  }, [currentPage, pageSize]);
-
-  const filteredList = useMemo(
-    () =>
-      products.filter((p) => {
-        const okStatus =
-          statusFilter === "ALL" || p.status === Number(statusFilter);
-        const okQ = p.name?.toLowerCase().includes(q.toLowerCase());
-        return okStatus && okQ;
-      }),
-    [products, statusFilter, q],
-  );
+  }, [currentPage, pageSize, debouncedQ, statusFilter]);
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
@@ -356,7 +360,7 @@ export default function Products() {
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <Table
           columns={columns}
-          dataSource={filteredList}
+          dataSource={products}
           rowKey="id"
           /* Cấu hình scroll ngang (x) và dọc (y) */
           scroll={{ x: "max-content" }}
@@ -391,7 +395,14 @@ export default function Products() {
           <Form.Item
             label="Tên sản phẩm"
             name="name"
-            rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: "Tên sản phẩm không được để trống",
+              },
+              { max: 50, message: "Tên sản phẩm không vượt quá 50 ký tự" },
+            ]}
           >
             <Input placeholder="Ví dụ: Thảm bê tông GCCM Roll 10mm" />
           </Form.Item>
@@ -399,11 +410,39 @@ export default function Products() {
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
           >
-            <Form.Item label="Độ dày (mm)" name="thicknessMm">
+            <Form.Item
+              label="Độ dày (mm)"
+              name="thicknessMm"
+              rules={[
+                { required: true, message: "Vui lòng nhập độ dày" },
+                { type: "number", min: 0.01, message: "Độ dày phải lớn hơn 0" },
+                {
+                  type: "number",
+                  max: 20,
+                  message: "Độ dày tối đa không quá 20mm",
+                },
+              ]}
+            >
               <InputNumber style={{ width: "100%" }} min={0} placeholder="10" />
             </Form.Item>
 
-            <Form.Item label="Trọng lượng (kg/m²)" name="weightKgM2">
+            <Form.Item
+              label="Trọng lượng (kg/m²)"
+              name="weightKgM2"
+              rules={[
+                { required: true, message: "Vui lòng nhập cân nặng" },
+                {
+                  type: "number",
+                  min: 0.01,
+                  message: "Cân nặng phải lớn hơn 0",
+                },
+                {
+                  type: "number",
+                  max: 20,
+                  message: "Cân nặng tối đa là 20kg/m²",
+                },
+              ]}
+            >
               <InputNumber
                 style={{ width: "100%" }}
                 min={0}
@@ -415,7 +454,19 @@ export default function Products() {
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
           >
-            <Form.Item label="Chiều rộng (m)" name="widthM">
+            <Form.Item
+              label="Chiều rộng (m)"
+              name="widthM"
+              rules={[
+                { required: true, message: "Vui lòng nhập chiều rộng" },
+                {
+                  type: "number",
+                  min: 0.01,
+                  message: "Chiều rộng phải lớn hơn 0",
+                },
+                { type: "number", max: 5, message: "Chiều rộng tối đa là 5m" },
+              ]}
+            >
               <InputNumber
                 style={{ width: "100%" }}
                 min={0}
@@ -423,7 +474,19 @@ export default function Products() {
               />
             </Form.Item>
 
-            <Form.Item label="Chiều dài (m)" name="lengthM">
+            <Form.Item
+              label="Chiều dài (m)"
+              name="lengthM"
+              rules={[
+                { required: true, message: "Vui lòng nhập chiều dài" },
+                {
+                  type: "number",
+                  min: 0.01,
+                  message: "Chiều dài phải lớn hơn 0",
+                },
+                { type: "number", max: 15, message: "Chiều dài tối đa là 15m" },
+              ]}
+            >
               <InputNumber
                 style={{ width: "100%" }}
                 min={0}
@@ -438,7 +501,15 @@ export default function Products() {
             <Form.Item
               label="Giá đơn vị (VNĐ)"
               name="unitPrice"
-              rules={[{ required: true, message: "Nhập giá bán" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập giá bán" },
+                { type: "number", min: 1, message: "Giá bán không được là 0" },
+                {
+                  type: "number",
+                  max: 1000000,
+                  message: "Giá bán tối đa là 1,000,000đ/m²",
+                },
+              ]}
             >
               <InputNumber
                 style={{ width: "100%" }}
@@ -447,7 +518,19 @@ export default function Products() {
               />
             </Form.Item>
 
-            <Form.Item label="Tồn kho (m²)" name="stockQuantityM2">
+            <Form.Item
+              label="Tồn kho (m²)"
+              name="stockQuantityM2"
+              rules={[
+                { required: true, message: "Tồn kho không được để trống" },
+                { type: "number", min: 0, message: "Tồn kho không được là 0" },
+                {
+                  type: "number",
+                  max: 200000,
+                  message: "Tồn kho tối đa là 200,000m²",
+                },
+              ]}
+            >
               <InputNumber style={{ width: "100%" }} min={0} />
             </Form.Item>
           </div>
@@ -455,7 +538,15 @@ export default function Products() {
           <div
             style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
           >
-            <Form.Item label="Trạng thái" name="status">
+            <Form.Item
+              label="Trạng thái"
+              name="status"
+              rules={[
+                { required: true, message: "Trạng thái không được để trống" },
+                { type: "number", min: 0, message: "Trạng thái không hợp lệ" },
+                { type: "number", max: 1, message: "Trạng thái không hợp lệ" },
+              ]}
+            >
               <Select
                 options={[
                   { value: 1, label: "Đang kinh doanh" },
@@ -478,7 +569,18 @@ export default function Products() {
             </Form.Item>
           </div>
 
-          <Form.Item label="Mô tả" name="description">
+          <Form.Item
+            label="Mô tả"
+            name="description"
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: "Mô tả không được để trống",
+              },
+              { max: 500, message: "Mô tả tối đa 500 ký tự" },
+            ]}
+          >
             <Input.TextArea rows={3} placeholder="Mô tả chi tiết sản phẩm..." />
           </Form.Item>
         </Form>

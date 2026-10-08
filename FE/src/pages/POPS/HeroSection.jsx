@@ -6,7 +6,7 @@ const heroSlides = [
     alt: "Nhà máy sản xuất thảm bê tông",
   },
   {
-    image: "/dist/img/anh10.jpg",
+    image: "/dist/img/anh4.jpg",
     alt: "Dây chuyền sản xuất",
   },
   {
