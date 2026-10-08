@@ -4,8 +4,8 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-# Bước 2: Chạy ứng dụng Java
-FROM openjdk:17-jdk-slim
+# Bước 2: Chạy ứng dụng Java 17
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
