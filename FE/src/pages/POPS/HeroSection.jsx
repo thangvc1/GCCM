@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 
 const heroSlides = [
   {
-    image: "/dist/img/anh3.jpg",
+    image: "/img/anh3.jpg",
     alt: "Nhà máy sản xuất thảm bê tông",
   },
   {
-    image: "/dist/img/anh4.jpg",
+    image: "/img/anh4.jpg",
     alt: "Dây chuyền sản xuất",
   },
   {
-    image: "/dist/img/anh8.jpg",
+    image: "/img/anh8.jpg",
     alt: "Công trình thi công",
   },
 ];

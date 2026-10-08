@@ -1,36 +1,36 @@
 const advantages = [
   {
-    image: "/dist/img/anh2.jpg",
+    image: "/img/anh2.jpg",
     title: "Bền 8–10 năm",
     description:
       "Bê tông cuộn sản xuất đạt tiêu chuẩn công nghệ, chịu lực nén cao, không nứt vỡ theo thời gian.",
   },
   {
-    image: "/dist/img/anh3.jpg",
+    image: "/img/anh3.jpg",
     title: "Chống thấm tuyệt đối",
     description:
       "Bề mặt xử lý đặc biệt, chống thấm nước và dầu mỡ, dễ vệ sinh bằng áp lực nước.",
   },
   {
-    image: "/dist/img/anh12.jpg",
+    image: "/img/anh12.jpg",
     title: "Cách âm, cách nhiệt",
     description:
       "Lớp bê tông dày giúp giảm tiếng ồn và cách nhiệt hiệu quả cho không gian phía dưới.",
   },
   {
-    image: "/dist/img/anh5.jpg",
+    image: "/img/anh5.jpg",
     title: "Lắp đặt nhanh",
     description:
       "Không cần trộn vữa, không chờ khô. Rải là hoàn thành – tiết kiệm 80% thời gian thi công.",
   },
   {
-    image: "/dist/img/anh6.jpg",
+    image: "/img/anh6.jpg",
     title: "Hỗ trợ thi công",
     description:
       "Công trình trên 5.000m² được đội ngũ kỹ thuật hỗ trợ thi công trực tiếp tại công trình.",
   },
   {
-    image: "/dist/img/anh11.jpg",
+    image: "/img/anh11.jpg",
     title: "Giao hàng toàn quốc",
     description:
       "Hệ thống vận chuyển chuyên dụng, đảm bảo sản phẩm đến tay khách hàng nguyên vẹn.",

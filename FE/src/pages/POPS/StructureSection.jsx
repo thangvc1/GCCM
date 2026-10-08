@@ -33,7 +33,7 @@ export default function StructureSection() {
         </div>
 
         <div className="pops-structure-panel">
-          <img src="/dist/img/anh2.jpg" alt="Structure" />
+          <img src="/img/anh2.jpg" alt="Structure" />
           {/* <div className="pops-panel-header">MẶT CẮT THẢM BÊ TÔNG</div>
           <div className="pops-panel-row">
             <span>01 — Lớp Thảm Polister (PET)</span>

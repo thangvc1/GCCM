@@ -42,7 +42,7 @@ export default function Layout() {
       <aside className={`sidebar ${open ? "open" : ""}`}>
         <div className="brand">
           <img
-            src="/dist/img/logo.jpg"
+            src="/img/logo.jpg"
             alt="Brand logo"
             style={{
               width: 36,

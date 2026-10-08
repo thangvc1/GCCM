@@ -28,7 +28,7 @@ export default function Register() {
         <div className="auth-header">
           <div className="brand-mark" style={{ margin: "0 auto 12px" }}>
             <img
-              src="/dist/img/logo.jpg"
+              src="/img/logo.jpg"
               alt="Thảm Bê Tông Việt Nam"
               style={{
                 width: "100%",

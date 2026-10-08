@@ -1095,7 +1095,7 @@ tr:hover td {
   place-items: center;
   background:
     linear-gradient(180deg, rgba(7, 22, 50, 0.72), rgba(7, 22, 50, 0.84)),
-    url("/dist/img/anh3.jpg") center/cover no-repeat;
+    url("/img/anh3.jpg") center/cover no-repeat;
   padding: 20px;
 }
 .auth-card {

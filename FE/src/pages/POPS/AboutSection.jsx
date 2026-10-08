@@ -9,7 +9,7 @@ export default function AboutSection() {
 
       <div className="pops-about-grid">
         <div className="pops-about-image-wrap">
-          <img src="/dist/img/anh8.jpg" alt="Factory" />
+          <img src="/img/anh8.jpg" alt="Factory" />
           <div className="pops-about-image-badge">
             Tạo ra những sản phẩm chất lượng, thực hiện và vận hành đúng với mục
             tiêu từng công trình

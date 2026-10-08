@@ -128,7 +128,7 @@ export default function POS() {
       <header className="landing-header">
         <Link className="landing-brand" to="/">
           <img
-            src="/dist/img/logo.jpg"
+            src="/img/logo.jpg"
             alt="Thảm Bê Tông Việt Nam logo"
             style={{
               width: 42,
@@ -402,7 +402,7 @@ export default function POS() {
           {/* Cột 1: Logo & Tên thương hiệu */}
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
-              src="/dist/img/logo.jpg"
+              src="/img/logo.jpg"
               alt="Thảm Bê Tông Việt Nam logo"
               style={{
                 width: 36,
