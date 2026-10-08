@@ -1,19 +1,23 @@
 package com.example.gccm.security;
 
-import java.util.Arrays;
-
+import com.example.gccm.constant.MappingConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -35,43 +39,34 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // @Bean
-    // public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    //     // BẬT TÍNH NĂNG CORS CỦA SPRING SECURITY TẠI ĐÂY
-    //     http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-    //             .csrf(csrf -> csrf.disable())
-    //             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-    //             .authorizeHttpRequests(auth -> auth
-    //                     // 1. Mở CÁC API CÔNG KHAI và WEBSOCKET
-    //                     // Bổ sung "/ws/**" vào đây để cho phép WebSocket handshake
-    //                     .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**", "/ws/**").permitAll()
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // BẬT TÍNH NĂNG CORS CỦA SPRING SECURITY TẠI ĐÂY
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 1. Mở CÁC API CÔNG KHAI và WEBSOCKET
+                        // Bổ sung "/ws/**" vào đây để cho phép WebSocket handshake
+                        .requestMatchers(MappingConstants.API_PUBLIC_PREFIX + "/**", "/ws/**").permitAll()
 
-    //                     // 2. Mở CỤ THỂ Login, Register VÀ trang test HTML
-    //                     .requestMatchers(MappingConstants.API_AUTH_PREFIX + "/login",
-    //                             MappingConstants.API_AUTH_PREFIX + "/register",
-    //                             "/test-crud.html").permitAll()
+                        // 2. Mở CỤ THỂ Login, Register VÀ trang test HTML
+                        .requestMatchers(MappingConstants.API_AUTH_PREFIX + "/login",
+                                MappingConstants.API_AUTH_PREFIX + "/register",
+                                "/test-crud.html").permitAll()
 
-    //                     // 3. Phân quyền Admin & Customer
-    //                     .requestMatchers(MappingConstants.API_ADMIN_PREFIX + "/**").hasAuthority("ROLE_ADMIN")
-    //                     .requestMatchers(MappingConstants.API_CUSTOMER_PREFIX + "/**").hasAuthority("ROLE_CUSTOMER")
+                        // 3. Phân quyền Admin & Customer
+                        .requestMatchers(MappingConstants.API_ADMIN_PREFIX + "/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(MappingConstants.API_CUSTOMER_PREFIX + "/**").hasAuthority("ROLE_CUSTOMER")
 
-    //                     // 4. Mọi request khác đều phải đăng nhập
-    //                     .anyRequest().authenticated()
-    //             );
+                        // 4. Mọi request khác đều phải đăng nhập
+                        .anyRequest().authenticated()
+                );
 
-    //     http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-    //     return http.build();
-    // }
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .authorizeHttpRequests(auth -> auth
-            .anyRequest().permitAll() // Tạm thời mở HẾT tất cả API để test
-        );
-    return http.build();
-}
+        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
     // CẤU HÌNH CORS TRỰC TIẾP CHO SECURITY
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
