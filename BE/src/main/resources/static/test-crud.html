@@ -37,7 +37,10 @@
     <!-- Nút Đăng xuất chung -->
     <div id="logoutBtnArea" class="hidden d-flex justify-content-between align-items-center mb-3">
         <h5 id="welcomeMsg" class="text-primary m-0"></h5>
-        <button class="btn btn-danger shadow-sm" onclick="logout()">Thoát</button>
+        <div>
+            <button class="btn btn-warning shadow-sm me-2" onclick="changePasswordModalObj.show()">Đổi mật khẩu</button>
+            <button class="btn btn-danger shadow-sm" onclick="logout()">Thoát</button>
+        </div>
     </div>
 
     <!-- ================== GIAO DIỆN ADMIN ================== -->
@@ -48,9 +51,12 @@
             <!-- Khu vực Thông báo -->
             <div class="col-md-4">
                 <div class="card border-warning mb-4 shadow-sm h-100">
-                    <div class="card-header bg-warning text-dark fw-bold">Thông báo hệ thống</div>
-                    <ul class="list-group list-group-flush" id="notificationList" style="max-height: 300px; overflow-y: auto;">
-                        <li class="list-group-item text-muted">Không có thông báo mới.</li>
+                    <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+                        <span>Thông báo hệ thống</span>
+                        <button class="btn btn-sm btn-outline-dark" onclick="markAllNotificationsAsRead()">Đọc tất cả</button>
+                    </div>
+                    <ul class="list-group list-group-flush" id="notificationList" style="max-height: 400px; overflow-y: auto;">
+                        <li class="list-group-item text-muted">Đang tải...</li>
                     </ul>
                 </div>
             </div>
@@ -58,8 +64,34 @@
             <!-- Khu vực Đơn hàng mới -->
             <div class="col-md-8">
                 <div class="card border-info mb-4 shadow-sm h-100">
-                    <div class="card-header bg-info text-white fw-bold">Danh sách Đơn hàng gần đây</div>
-                    <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
+                    <div class="card-header bg-info text-white fw-bold">Quản lý Đơn hàng</div>
+
+                    <!-- Thanh Tìm Kiếm Đơn Hàng -->
+                    <div class="row mb-2 px-3 pt-3">
+                        <div class="col-md-3 mb-2">
+                            <input type="text" id="searchOrderKeyword" class="form-control form-control-sm" placeholder="Tên KH, SĐT..." onkeyup="if(event.key === 'Enter') loadAdminOrders()">
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <input type="number" id="searchOrderThickness" class="form-control form-control-sm" placeholder="Độ dày (mm)" onkeyup="if(event.key === 'Enter') loadAdminOrders()">
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Từ</span>
+                                <input type="date" id="searchOrderStartDate" class="form-control" onchange="loadAdminOrders()">
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">Đến</span>
+                                <input type="date" id="searchOrderEndDate" class="form-control" onchange="loadAdminOrders()">
+                            </div>
+                        </div>
+                        <div class="col-md-1 mb-2">
+                            <button class="btn btn-primary btn-sm w-100" onclick="loadAdminOrders()">Tìm</button>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0" style="max-height: 330px; overflow-y: auto;">
                         <table class="table table-hover table-striped m-0 text-center">
                             <thead class="table-light sticky-top">
                             <tr>
@@ -75,8 +107,11 @@
             </div>
         </div>
 
+        <hr class="my-5 border-2 border-primary">
+        <h4 class="mb-4">Quản Lý Sản Phẩm</h4>
+
         <!-- Form Thêm Mới Nhanh Sản Phẩm -->
-        <div class="card p-3 mb-4 shadow-sm">
+        <div class="card p-3 mb-4 shadow-sm border-primary">
             <h5>Thêm Sản Phẩm Mới</h5>
             <div class="row g-2">
                 <div class="col-md-4"><input type="text" id="name" class="form-control" placeholder="Tên sản phẩm"></div>
@@ -89,8 +124,8 @@
                 <div class="col-md-4"><input type="text" id="desc" class="form-control" placeholder="Mô tả"></div>
                 <div class="col-md-2">
                     <select id="status" class="form-select">
-                        <option value="1">Đang bán</option>
-                        <option value="0">Ngừng bán</option>
+                        <option value="1">Đang kinh doanh</option>
+                        <option value="2">Ngừng kinh doanh</option>
                     </select>
                 </div>
                 <div class="col-md-12 mt-2">
@@ -99,13 +134,30 @@
                 </div>
             </div>
             <div class="mt-3">
-                <button class="btn btn-success" onclick="createProduct()">Thêm Mới</button>
+                <button class="btn btn-primary" onclick="createProduct()">Thêm Mới Sản Phẩm</button>
                 <button class="btn btn-secondary" onclick="resetForm()">Làm mới Form</button>
             </div>
         </div>
 
+        <!-- Thanh Tìm Kiếm Sản Phẩm -->
+        <div class="row mb-3 mt-4">
+            <div class="col-md-5">
+                <input type="text" id="searchProdKeyword" class="form-control" placeholder="Tìm theo tên sản phẩm, độ dày (VD: 8)..." onkeyup="if(event.key === 'Enter') loadAdminProducts()">
+            </div>
+            <div class="col-md-3">
+                <select id="searchProdStatus" class="form-select" onchange="loadAdminProducts()">
+                    <option value="0">Tất cả trạng thái</option>
+                    <option value="1">Đang kinh doanh</option>
+                    <option value="2">Ngừng kinh doanh</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="loadAdminProducts()">Tìm kiếm</button>
+            </div>
+        </div>
+
         <!-- Bảng Dữ liệu Sản Phẩm -->
-        <table class="table table-bordered table-hover bg-white shadow-sm align-middle">
+        <table class="table table-bordered table-hover bg-white shadow-sm align-middle text-center">
             <thead class="table-dark">
             <tr>
                 <th>Ảnh</th><th>Tên SP</th><th>Quy cách</th><th>Khổ</th>
@@ -113,6 +165,59 @@
             </tr>
             </thead>
             <tbody id="adminTableBody"></tbody>
+        </table>
+
+        <!-- ================== KHU VỰC QUẢN LÝ KHÁCH HÀNG ================== -->
+        <hr class="my-5 border-2 border-primary">
+        <h4 class="mb-4">Quản Lý Khách Hàng</h4>
+
+        <!-- Thanh Tìm Kiếm Khách Hàng -->
+        <div class="row mb-3 mt-4">
+            <div class="col-md-5">
+                <input type="text" id="searchCusKeyword" class="form-control" placeholder="Tìm theo tên, SĐT, địa chỉ, tài khoản..." onkeyup="if(event.key === 'Enter') loadAdminCustomers()">
+            </div>
+            <div class="col-md-3">
+                <select id="searchCusStatus" class="form-select" onchange="loadAdminCustomers()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="1">Đang hoạt động</option>
+                    <option value="0">Đã khóa</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="loadAdminCustomers()">Tìm kiếm</button>
+            </div>
+        </div>
+
+        <!-- Form Thêm Mới Khách Hàng -->
+        <div class="card p-3 mb-4 shadow-sm border-success">
+            <h5>Thêm Khách Hàng Mới</h5>
+            <div class="row g-2">
+                <div class="col-md-3"><input type="text" id="cusUsername" class="form-control" placeholder="Tên đăng nhập"></div>
+                <div class="col-md-3"><input type="password" id="cusPassword" class="form-control" placeholder="Mật khẩu"></div>
+                <div class="col-md-3"><input type="text" id="cusFullName" class="form-control" placeholder="Họ và tên"></div>
+                <div class="col-md-3"><input type="text" id="cusPhone" class="form-control" placeholder="Số điện thoại"></div>
+                <div class="col-md-9"><input type="text" id="cusAddress" class="form-control" placeholder="Địa chỉ"></div>
+                <div class="col-md-3">
+                    <select id="cusStatus" class="form-select">
+                        <option value="1">Đang hoạt động</option>
+                        <option value="0">Khóa tài khoản</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-success" onclick="createCustomer()">Thêm Mới KH</button>
+                <button class="btn btn-secondary" onclick="resetCustomerForm()">Làm mới</button>
+            </div>
+        </div>
+
+        <!-- Bảng Dữ liệu Khách Hàng -->
+        <table class="table table-bordered table-hover bg-white shadow-sm align-middle text-center">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th><th>Tài khoản</th><th>Họ & Tên</th><th>SĐT</th><th>Địa chỉ</th><th>Trạng thái</th><th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody id="adminCustomerTableBody"></tbody>
         </table>
     </div>
 
@@ -169,8 +274,8 @@
                     <div class="col-md-4">
                         <label class="form-label">Trạng thái</label>
                         <select id="editStatus" class="form-select">
-                            <option value="1">Đang bán</option>
-                            <option value="0">Ngừng bán</option>
+                            <option value="1">Đang kinh doanh</option>
+                            <option value="2">Ngừng kinh doanh</option>
                         </select>
                     </div>
                     <div class="col-md-12">
@@ -187,6 +292,44 @@
     </div>
 </div>
 
+<!-- ================== MODAL SỬA KHÁCH HÀNG (ADMIN) ================== -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sửa Thông Tin Khách Hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editCusId">
+                <div class="mb-3">
+                    <label class="form-label">Họ và tên</label>
+                    <input type="text" id="editCusFullName" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" id="editCusPhone" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Địa chỉ</label>
+                    <input type="text" id="editCusAddress" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select id="editCusStatus" class="form-select">
+                        <option value="1">Đang hoạt động</option>
+                        <option value="0">Khóa tài khoản</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="submitUpdateCustomer()">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ================== MODAL ĐĂNG KÝ ================== -->
 <div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -197,14 +340,44 @@
             </div>
             <div class="modal-body">
                 <div class="mb-2"><label>Tên đăng nhập</label><input type="text" id="regUsername" class="form-control"></div>
-                <div class="mb-2"><label>Mật khẩu</label><input type="password" id="regPassword" class="form-control"></div>
+                <div class="mb-2"><label>Mật khẩu</label><input type="password" id="regPassword" class="form-control" placeholder="Tối thiểu 6 ký tự"></div>
                 <div class="mb-2"><label>Họ và tên</label><input type="text" id="regFullName" class="form-control"></div>
-                <div class="mb-2"><label>Số điện thoại</label><input type="text" id="regPhone" class="form-control"></div>
+                <div class="mb-2"><label>Số điện thoại</label><input type="text" id="regPhone" class="form-control" placeholder="Ví dụ: 0987654321"></div>
                 <div class="mb-2"><label>Địa chỉ</label><input type="text" id="regAddress" class="form-control"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-primary" onclick="register()">Xác nhận Đăng ký</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================== MODAL ĐỔI MẬT KHẨU ================== -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Đổi Mật Khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Mật khẩu cũ</label>
+                    <input type="password" id="oldPassword" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Mật khẩu mới</label>
+                    <input type="password" id="newPassword" class="form-control" placeholder="Tối thiểu 6 ký tự">
+                </div>
+                <div class="mb-3">
+                    <label>Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirmNewPassword" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="submitChangePassword()">Lưu Thay Đổi</button>
             </div>
         </div>
     </div>
@@ -217,11 +390,16 @@
 
     let registerModalObj = null;
     let editModalObj = null;
-    let stompClient = null; // CHUẨN BỊ BIẾN WEBSOCKET
+    let editCustomerModalObj = null;
+    let changePasswordModalObj = null;
+    let stompClient = null;
 
     document.addEventListener("DOMContentLoaded", function() {
         registerModalObj = new bootstrap.Modal(document.getElementById('registerModal'));
         editModalObj = new bootstrap.Modal(document.getElementById('editModal'));
+        editCustomerModalObj = new bootstrap.Modal(document.getElementById('editCustomerModal'));
+        changePasswordModalObj = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+
         if (jwtToken && currentRole) {
             routeUser(currentRole);
         }
@@ -251,24 +429,72 @@
     }
 
     async function register() {
-        const payload = {
-            username: document.getElementById('regUsername').value,
-            password: document.getElementById('regPassword').value,
-            email: document.getElementById('regUsername').value + "@gmail.com",
-            fullName: document.getElementById('regFullName').value,
-            phone: document.getElementById('regPhone').value,
-            address: document.getElementById('regAddress').value
-        };
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const fullName = document.getElementById('regFullName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const address = document.getElementById('regAddress').value.trim();
+
+        if (!username || !password || !fullName || !phone || !address) {
+            alert("Lỗi: Vui lòng nhập đầy đủ tất cả các trường thông tin!");
+            return;
+        }
+        if (password.length < 6) {
+            alert("Lỗi: Mật khẩu phải có ít nhất 6 ký tự!");
+            return;
+        }
+        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        if (!phoneRegex.test(phone)) {
+            alert("Lỗi: Định dạng số điện thoại Việt Nam không hợp lệ!");
+            return;
+        }
+
+        const payload = { username, password, email: username + "@gmail.com", fullName, phone, address };
+
         const res = await fetch(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
         if (res.ok) {
-            alert("Đăng ký thành công!");
+            alert("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
             registerModalObj.hide();
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = "";
         } else {
-            alert(await res.text());
+            const errorMsg = await res.text();
+            alert("Lỗi đăng ký: " + errorMsg);
+        }
+    }
+
+    async function submitChangePassword() {
+        const oldPassword = document.getElementById('oldPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+        if (newPassword !== confirmNewPassword) {
+            alert("Lỗi: Mật khẩu xác nhận không khớp!");
+            return;
+        }
+
+        const payload = { oldPassword, newPassword };
+
+        const res = await fetch(`${API_BASE}/auth/change-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + jwtToken
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+            logout();
+        } else {
+            const errorMsg = await res.text();
+            alert("Lỗi: " + errorMsg);
         }
     }
 
@@ -294,34 +520,26 @@
         }
     }
 
-    // ================== LOGIC KẾT NỐI WEBSOCKET ==================
     function connectWebSocket() {
         const socket = new SockJS('http://localhost:8080/ws');
         stompClient = Stomp.over(socket);
-        stompClient.debug = null; // Tắt bớt log rác
+        stompClient.debug = null;
 
         stompClient.connect({}, function (frame) {
             console.log('Đã kết nối WebSocket thành công!');
-
-            // Lắng nghe kênh thông báo
             stompClient.subscribe('/topic/admin/notifications', function (message) {
                 const notif = JSON.parse(message.body);
                 const list = document.getElementById('notificationList');
+                if (list.innerHTML.includes("Không có thông báo mới")) list.innerHTML = "";
 
-                if (list.innerHTML.includes("Không có thông báo mới")) {
-                    list.innerHTML = "";
-                }
-
-                // Chèn thông báo lên đầu
                 const newLi = `
                     <li class="list-group-item bg-light border-warning">
                         <span class="badge bg-danger">MỚI</span>
                         <strong>${notif.title}</strong><br>
-                        <small>${notif.content.replace(/\n/g, '<br>')}</small>
+                        <small>${notif.content.replace(/\n/g, '<br>')}</small><br>
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="markNotificationAsRead(${notif.id})">Đánh dấu đã đọc</button>
                     </li>`;
                 list.insertAdjacentHTML('afterbegin', newLi);
-
-                // Load lại luôn danh sách đơn hàng
                 loadAdminOrders();
             });
         });
@@ -337,10 +555,8 @@
             loadAdminProducts();
             loadNotifications();
             loadAdminOrders();
-
-            // KÍCH HOẠT WEBSOCKET NẾU LÀ ADMIN
+            loadAdminCustomers();
             if (stompClient === null) connectWebSocket();
-
         } else if (role === 'ROLE_CUSTOMER') {
             document.getElementById('customerSection').classList.remove('hidden');
             loadCustomerProducts();
@@ -353,16 +569,73 @@
         location.reload();
     }
 
-    // ================= LOGIC ADMIN CRUD PRODUCT =================
-    async function loadAdminProducts() {
-        const res = await fetch(`${API_BASE}/admin/products?page=1&size=100`, {
+    // ================= LOGIC NOTIFICATIONS =================
+    async function loadNotifications() {
+        try {
+            const res = await fetch(`${API_BASE}/admin/notifications`, {
+                headers: { 'Authorization': 'Bearer ' + jwtToken }
+            });
+            const notifs = await res.json();
+            const list = document.getElementById('notificationList');
+            if (notifs.length > 0) {
+                list.innerHTML = "";
+                notifs.forEach(n => {
+                    const isUnread = n.isRead === 0;
+                    const bgClass = isUnread ? 'bg-light border-warning' : '';
+                    const badgeHtml = isUnread ? `<span class="badge bg-danger">MỚI</span>` : '';
+                    const readButton = isUnread ? `<button class="btn btn-link btn-sm p-0 text-decoration-none" onclick="markNotificationAsRead(${n.id})">Đánh dấu đã đọc</button>` : '';
+
+                    list.innerHTML += `
+                        <li class="list-group-item ${bgClass}">
+                            ${badgeHtml} <span class="badge bg-secondary">${n.type || 'TB'}</span>
+                            <strong>${n.title}</strong><br>
+                            <small>${n.content.replace(/\n/g, '<br>')}</small><br>
+                            ${readButton}
+                        </li>`;
+                });
+            } else {
+                list.innerHTML = `<li class="list-group-item text-muted">Không có thông báo mới.</li>`;
+            }
+        } catch (e) { console.error("Lỗi tải lịch sử thông báo", e); }
+    }
+
+    async function markNotificationAsRead(id) {
+        const res = await fetch(`${API_BASE}/admin/notifications/${id}/read`, {
+            method: 'PUT',
             headers: { 'Authorization': 'Bearer ' + jwtToken }
         });
+        if (res.ok) loadNotifications();
+    }
+
+    async function markAllNotificationsAsRead() {
+        const res = await fetch(`${API_BASE}/admin/notifications/read-all`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        if (res.ok) loadNotifications();
+    }
+
+    // ================= LOGIC ADMIN CRUD PRODUCT & SEARCH =================
+    async function loadAdminProducts() {
+        const keyword = document.getElementById('searchProdKeyword')?.value || '';
+        const status = document.getElementById('searchProdStatus')?.value || '0';
+
+        let url = `${API_BASE}/admin/products?page=1&size=100`;
+        if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+        if (status !== '0') url += `&status=${status}`;
+
+        const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + jwtToken } });
         const responseData = await res.json();
-        const products = responseData.data;
+        const products = responseData.data || responseData.content || responseData;
 
         const tbody = document.getElementById('adminTableBody');
         tbody.innerHTML = "";
+
+        if(!products || products.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">Không tìm thấy sản phẩm phù hợp</td></tr>`;
+            return;
+        }
+
         products.forEach(p => {
             const pStr = encodeURIComponent(JSON.stringify(p));
             const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="product-img-thumbnail">` : '-';
@@ -371,7 +644,7 @@
                     <td>${imgHtml}</td><td class="fw-bold">${p.name}</td>
                     <td>${p.thicknessMm}mm - ${p.weightKgM2}kg</td><td>${p.widthM}x${p.lengthM}m</td>
                     <td class="text-danger">${p.unitPrice.toLocaleString('vi-VN')} đ</td><td>${p.stockQuantityM2} m²</td>
-                    <td>${p.status === 1 ? 'Bán' : 'Dừng'}</td>
+                    <td>${p.status === 1 ? 'Đang KD' : (p.status === 2 ? 'Ngừng KD' : 'Khác')}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="openEditModal('${pStr}')">Sửa</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Xóa</button>
@@ -395,11 +668,8 @@
 
         const formData = new FormData();
         formData.append("product", new Blob([JSON.stringify(productData)], { type: "application/json" }));
-
         const imageInput = document.getElementById('imageFile');
-        if (imageInput.files.length > 0) {
-            formData.append("image", imageInput.files[0]);
-        }
+        if (imageInput.files.length > 0) formData.append("image", imageInput.files[0]);
 
         const res = await fetch(`${API_BASE}/admin/products`, {
             method: 'POST',
@@ -411,9 +681,7 @@
             resetForm();
             loadAdminProducts();
             alert("Thêm mới thành công!");
-        } else {
-            alert("Lỗi khi thêm sản phẩm: " + await res.text());
-        }
+        } else alert("Lỗi khi thêm sản phẩm: " + await res.text());
     }
 
     function openEditModal(encodedProduct) {
@@ -448,11 +716,8 @@
 
         const formData = new FormData();
         formData.append("product", new Blob([JSON.stringify(productData)], { type: "application/json" }));
-
         const imageInput = document.getElementById('editImageFile');
-        if (imageInput.files.length > 0) {
-            formData.append("image", imageInput.files[0]);
-        }
+        if (imageInput.files.length > 0) formData.append("image", imageInput.files[0]);
 
         const res = await fetch(`${API_BASE}/admin/products/${id}`, {
             method: 'PUT',
@@ -464,9 +729,7 @@
             editModalObj.hide();
             loadAdminProducts();
             alert("Cập nhật thành công!");
-        } else {
-            alert("Lỗi cập nhật: " + await res.text());
-        }
+        } else alert("Lỗi cập nhật: " + await res.text());
     }
 
     async function deleteProduct(id) {
@@ -490,55 +753,163 @@
         document.getElementById('status').value = "1";
     }
 
+    // ================= LOGIC ADMIN ORDER & SEARCH =================
     async function loadAdminOrders() {
         try {
-            const res = await fetch(`${API_BASE}/admin/orders?page=1&size=50`, {
-                headers: { 'Authorization': 'Bearer ' + jwtToken }
-            });
+            const keyword = document.getElementById('searchOrderKeyword')?.value || '';
+            const thickness = document.getElementById('searchOrderThickness')?.value || '';
+            const startDate = document.getElementById('searchOrderStartDate')?.value || '';
+            const endDate = document.getElementById('searchOrderEndDate')?.value || '';
+
+            let url = `${API_BASE}/admin/orders?page=1&size=50`;
+            if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+            if (thickness) url += `&thickness=${thickness}`;
+            if (startDate) url += `&startDate=${startDate}`;
+            if (endDate) url += `&endDate=${endDate}`;
+
+            const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + jwtToken } });
             const data = await res.json();
-            const orders = data.data;
+            const orders = data.data || data.content || data;
 
             const tbody = document.getElementById('adminOrderTableBody');
             tbody.innerHTML = "";
+
+            if(!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Không tìm thấy đơn hàng nào</td></tr>`;
+                return;
+            }
+
             orders.forEach(o => {
                 tbody.innerHTML += `
                     <tr>
                         <td>#${o.id}</td>
-                        <td>${o.receiverName} <br><small class="text-muted">${o.customerName !== 'Khách vãng lai' ? '(Thành viên)' : '(Vãng lai)'}</small></td>
+                        <td>${o.receiverName} <br><small class="text-muted">${o.customerName && o.customerName !== 'Khách vãng lai' ? '(Thành viên)' : '(Vãng lai)'}</small></td>
                         <td>${o.receiverPhone}</td>
                         <td>${o.deliveryAddress}</td>
-                        <td class="text-danger fw-bold">${o.finalAmount.toLocaleString('vi-VN')} đ</td>
+                        <td class="text-danger fw-bold">${o.finalAmount ? o.finalAmount.toLocaleString('vi-VN') : 0} đ</td>
                     </tr>`;
             });
-        } catch (e) {
-            console.error("Chưa có API Admin Orders", e);
-        }
+        } catch (e) { console.error("Chưa có API Admin Orders hoặc lỗi fetch", e); }
     }
 
-    // ĐÃ SỬA LẠI URL TRỎ TỚI ADMIN NOTIFICATION CONTROLLER
-    async function loadNotifications() {
-        try {
-            const res = await fetch(`${API_BASE}/admin/notifications`, {
-                headers: { 'Authorization': 'Bearer ' + jwtToken }
-            });
-            const notifs = await res.json();
-            const list = document.getElementById('notificationList');
-            if(notifs.length > 0) {
-                list.innerHTML = "";
-                notifs.forEach(n => {
-                    list.innerHTML += `
-                        <li class="list-group-item">
-                            <span class="badge bg-secondary">${n.type || 'TB'}</span>
-                            <strong>${n.title}</strong><br>
-                            <small>${n.content.replace(/\n/g, '<br>')}</small>
-                        </li>`;
-                });
-            }
-        } catch (e) {
-            console.error("Lỗi tải lịch sử thông báo", e);
+    // ================= LOGIC ADMIN CUSTOMER & SEARCH =================
+    async function loadAdminCustomers() {
+        const keyword = document.getElementById('searchCusKeyword')?.value || '';
+        const status = document.getElementById('searchCusStatus')?.value || '';
+
+        let url = `${API_BASE}/admin/customers?`;
+        if (keyword) url += `keyword=${encodeURIComponent(keyword)}&`;
+        if (status !== '') url += `status=${status}`;
+
+        const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + jwtToken } });
+        const customers = await res.json();
+
+        const tbody = document.getElementById('adminCustomerTableBody');
+        tbody.innerHTML = "";
+
+        if(!customers || customers.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Không tìm thấy khách hàng nào</td></tr>`;
+            return;
         }
+
+        customers.forEach(c => {
+            const statusBadge = c.status === 1
+                ? '<span class="badge bg-success">Hoạt động</span>'
+                : '<span class="badge bg-danger">Đã khóa</span>';
+            const toggleBtnClass = c.status === 1 ? 'btn-danger' : 'btn-success';
+            const toggleBtnText = c.status === 1 ? 'Khóa' : 'Mở khóa';
+            const cStr = encodeURIComponent(JSON.stringify(c));
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${c.id}</td>
+                    <td class="fw-bold text-primary">${c.username || 'N/A'}</td>
+                    <td>${c.fullName}</td>
+                    <td>${c.phone}</td>
+                    <td>${c.address}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" onclick="openEditCustomerModal('${cStr}')">Sửa</button>
+                        <button class="btn btn-sm ${toggleBtnClass}" onclick="toggleCustomer(${c.id})">${toggleBtnText}</button>
+                    </td>
+                </tr>`;
+        });
     }
 
+    async function createCustomer() {
+        const payload = {
+            username: document.getElementById('cusUsername').value,
+            password: document.getElementById('cusPassword').value,
+            fullName: document.getElementById('cusFullName').value,
+            phone: document.getElementById('cusPhone').value,
+            address: document.getElementById('cusAddress').value,
+            status: parseInt(document.getElementById('cusStatus').value)
+        };
+
+        const res = await fetch(`${API_BASE}/admin/customers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwtToken },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            resetCustomerForm();
+            loadAdminCustomers();
+            alert("Thêm khách hàng thành công!");
+        } else alert("Lỗi khi thêm: " + await res.text());
+    }
+
+    async function toggleCustomer(id) {
+        if (!confirm("Bạn có chắc muốn thay đổi trạng thái hoạt động của khách hàng này?")) return;
+        const res = await fetch(`${API_BASE}/admin/customers/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        if (res.ok) loadAdminCustomers();
+    }
+
+    function openEditCustomerModal(encodedCus) {
+        const c = JSON.parse(decodeURIComponent(encodedCus));
+        document.getElementById('editCusId').value = c.id;
+        document.getElementById('editCusFullName').value = c.fullName;
+        document.getElementById('editCusPhone').value = c.phone;
+        document.getElementById('editCusAddress').value = c.address;
+        document.getElementById('editCusStatus').value = c.status;
+        editCustomerModalObj.show();
+    }
+
+    async function submitUpdateCustomer() {
+        const id = document.getElementById('editCusId').value;
+        const payload = {
+            fullName: document.getElementById('editCusFullName').value,
+            phone: document.getElementById('editCusPhone').value,
+            address: document.getElementById('editCusAddress').value,
+            status: parseInt(document.getElementById('editCusStatus').value)
+        };
+
+        const res = await fetch(`${API_BASE}/admin/customers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwtToken },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            editCustomerModalObj.hide();
+            loadAdminCustomers();
+            alert("Cập nhật thông tin khách hàng thành công!");
+        } else alert("Lỗi cập nhật: " + await res.text());
+    }
+
+    function resetCustomerForm() {
+        document.getElementById('cusUsername').value = "";
+        document.getElementById('cusPassword').value = "";
+        document.getElementById('cusFullName').value = "";
+        document.getElementById('cusPhone').value = "";
+        document.getElementById('cusAddress').value = "";
+        document.getElementById('cusStatus').value = "1";
+    }
+
+    // ================= LOGIC CUSTOMER STORE =================
     let storeProducts = [];
 
     async function loadCustomerProducts() {
@@ -568,9 +939,7 @@
         const items = [];
         storeProducts.filter(p => p.status === 1).forEach(p => {
             const qtyInput = document.getElementById(`qty_${p.id}`).value;
-            if (qtyInput && parseFloat(qtyInput) > 0) {
-                items.push({ productId: p.id, quantityM2: parseFloat(qtyInput) });
-            }
+            if (qtyInput && parseFloat(qtyInput) > 0) items.push({ productId: p.id, quantityM2: parseFloat(qtyInput) });
         });
 
         const payload = {
@@ -585,22 +954,15 @@
         let headers = { 'Content-Type': 'application/json' };
         if (jwtToken) headers['Authorization'] = 'Bearer ' + jwtToken;
 
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(payload)
-        });
+        const res = await fetch(endpoint, { method: 'POST', headers: headers, body: JSON.stringify(payload) });
 
         if (res.ok) {
             alert("Đã gửi yêu cầu đặt hàng thành công!");
-
-            // Xóa form sau khi gửi
             document.getElementById('receiverName').value = "";
             document.getElementById('receiverPhone').value = "";
             document.getElementById('deliveryAddress').value = "";
             document.getElementById('customerNote').value = "";
             storeProducts.forEach(p => document.getElementById(`qty_${p.id}`).value = "");
-
         } else {
             const errorMsg = await res.text();
             document.getElementById('orderErrorMsg').innerText = "Lỗi: " + errorMsg;

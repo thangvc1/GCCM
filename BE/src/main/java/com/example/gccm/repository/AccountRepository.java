@@ -10,4 +10,5 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     // Yêu cầu Spring Data tự động JOIN với cột "role" khi gọi hàm này
     @EntityGraph(attributePaths = {"role"})
     Optional<Account> findByUsername(String username);
+    boolean existsByUsername(String username);
 }

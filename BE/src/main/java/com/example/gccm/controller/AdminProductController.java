@@ -29,17 +29,17 @@ public class AdminProductController {
         this.cloudinaryService = cloudinaryService;
     }
 
-    // 1. GET ALL (Có phân trang & Tìm kiếm)
+    // Trong AdminProductController.java, sửa lại hàm GetMapping
     @GetMapping
-    public ResponseEntity<PageableObject<Product>> getAllProducts(ProductPageRequest request) {
-        int pageNo = request.getPage() > 0 ? request.getPage() - 1 : 0;
+    public ResponseEntity<?> getAllProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "100") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "0") Integer status) {
 
-        Sort.Direction direction = request.getSortBy().equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(pageNo, request.getSize(), Sort.by(direction, request.getOrderBy()));
-
-        Page<Product> productPage = productRepository.searchProducts(request.getQ(), request.getStatus(), pageable);
-
-        return ResponseEntity.ok(PageableObject.of(productPage));
+        Pageable pageable = PageRequest.of(page - 1, size);
+        // Gọi sang service hoặc repository (tùy cấu trúc bạn đang dùng)
+        return ResponseEntity.ok(productRepository.searchProducts(keyword, status, pageable));
     }
 
     // 2. THÊM MỚI (Dùng DTO có Validate)

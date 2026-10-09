@@ -1,10 +1,7 @@
 package com.example.gccm.controller;
 
 import com.example.gccm.constant.MappingConstants;
-import com.example.gccm.dto.JwtResponse;
-import com.example.gccm.dto.LoginRequest;
-import com.example.gccm.dto.RegisterRequest;
-import com.example.gccm.dto.UserResponse;
+import com.example.gccm.dto.*;
 import com.example.gccm.entity.Account;
 import com.example.gccm.entity.Customer;
 import com.example.gccm.entity.Role;
@@ -119,5 +116,30 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(userResponse);
+    }
+
+    // Nhớ import ChangePasswordRequest
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        // Lấy thông tin user đang đăng nhập
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Chưa xác thực");
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Account account = accountRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+
+        // Kiểm tra mật khẩu cũ có khớp không
+        if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
+            return ResponseEntity.badRequest().body("Mật khẩu cũ không chính xác!");
+        }
+
+        // Cập nhật mật khẩu mới
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        accountRepository.save(account);
+
+        return ResponseEntity.ok("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
     }
 }

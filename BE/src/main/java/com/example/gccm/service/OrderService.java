@@ -4,7 +4,6 @@ import com.example.gccm.dto.OrderDetailResponseDTO;
 import com.example.gccm.dto.OrderResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import java.util.stream.Collectors;
 import com.example.gccm.dto.OrderItemRequest;
 import com.example.gccm.dto.OrderRequest;
 import com.example.gccm.entity.*;
@@ -45,22 +44,19 @@ public class OrderService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @Transactional // Đảm bảo nếu lỗi ở bất kỳ dòng nào, toàn bộ quá trình sẽ được Rollback
+    @Transactional
     public Order createOrder(OrderRequest request) {
 
-        // 1. Kiểm tra xem người dùng là Khách đăng nhập hay Khách vãng lai
         Customer currentCustomer = null;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
             CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-            // Lấy Customer thông qua Account ID
             currentCustomer = customerRepository.findByAccountId(userDetails.getAccount().getId()).orElse(null);
         }
 
-        // 2. Khởi tạo Đơn hàng (Order)
         Order order = new Order();
-        order.setCustomer(currentCustomer); // Sẽ là null nếu là khách vãng lai
+        order.setCustomer(currentCustomer);
         order.setReceiverName(request.getReceiverName());
         order.setReceiverPhone(request.getReceiverPhone());
         order.setDeliveryAddress(request.getDeliveryAddress());
@@ -70,15 +66,12 @@ public class OrderService {
         order.setTotalPrice(BigDecimal.ZERO);
         order.setFinalAmount(BigDecimal.ZERO);
 
-        // Lưu tạm order để lấy ID (dùng cho OrderDetail)
         order = orderRepository.save(order);
 
-        // 3. Xử lý Giỏ hàng (Order Details) và Tính tiền an toàn từ DB
         BigDecimal totalArea = BigDecimal.ZERO;
         BigDecimal totalPrice = BigDecimal.ZERO;
         List<OrderDetail> details = new ArrayList<>();
 
-        // Tạo StringBuilder để nối chuỗi nội dung Thông báo cho Admin
         StringBuilder notifContent = new StringBuilder();
         notifContent.append("Khách hàng: ").append(request.getReceiverName())
                 .append(" - SĐT: ").append(request.getReceiverPhone())
@@ -92,39 +85,31 @@ public class OrderService {
             detail.setOrder(order);
             detail.setProduct(product);
             detail.setQuantityM2(itemReq.getQuantityM2());
-            detail.setUnitPrice(product.getUnitPrice()); // LẤY GIÁ TỪ DB, KHÔNG NHẬN TỪ FRONTEND
+            detail.setUnitPrice(product.getUnitPrice());
 
-            // Công thức: Thành tiền = Giá * Số lượng
             BigDecimal subtotal = product.getUnitPrice().multiply(itemReq.getQuantityM2());
             detail.setSubtotal(subtotal);
             details.add(detail);
 
-            // Cộng dồn tổng đơn
             totalArea = totalArea.add(itemReq.getQuantityM2());
             totalPrice = totalPrice.add(subtotal);
 
-            // Nối chuỗi thông báo: "- 20m2 Thảm bê tông GCCM (Dày: 10mm)"
             notifContent.append("- ").append(itemReq.getQuantityM2()).append("m2 ")
                     .append(product.getName()).append(" (Dày: ").append(product.getThicknessMm()).append("mm)\n");
         }
 
         orderDetailRepository.saveAll(details);
 
-        // Cập nhật lại tổng tiền cho Đơn hàng
         order.setTotalAreaM2(totalArea);
         order.setTotalPrice(totalPrice);
-        order.setFinalAmount(totalPrice); // Nếu bạn có Voucher, logic trừ tiền sẽ nằm ở đây
+        order.setFinalAmount(totalPrice);
         orderRepository.save(order);
 
-        // 4. Tạo Thông báo gửi Admin
         Notification notif = new Notification();
         notif.setTitle("Đơn hàng mới từ " + request.getReceiverName());
         notif.setContent(notifContent.toString());
         notif.setOrderId(order.getId());
-
-        // SỬ DỤNG ENUM TẠI ĐÂY
         notif.setType(NotificationType.NEW_ORDER);
-
         notif.setIsRead(0);
         notif.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(notif);
@@ -133,17 +118,20 @@ public class OrderService {
         return order;
     }
 
-    // HÀM MỚI 1: Lấy TẤT CẢ đơn hàng (Dành cho Admin)
     public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
         return orderRepository.findAll(pageable).map(this::mapToOrderResponseDTO);
     }
 
-    // HÀM MỚI 2: Lấy đơn hàng CỦA RIÊNG MỘT KHÁCH (Dành cho Customer xem lịch sử)
     public Page<OrderResponseDTO> getOrdersByCustomer(Long customerId, Pageable pageable) {
         return orderRepository.findByCustomerId(customerId, pageable).map(this::mapToOrderResponseDTO);
     }
 
-    // HÀM TIỆN ÍCH: Chuyển Entity Order -> DTO an toàn
+    // HÀM MỚI TÍCH HỢP CHO TÌM KIẾM ĐƠN HÀNG
+    public Page<OrderResponseDTO> searchAdminOrders(String keyword, Integer thickness, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        return orderRepository.searchAdminOrders(keyword, thickness, startDate, endDate, pageable)
+                .map(this::mapToOrderResponseDTO);
+    }
+
     private OrderResponseDTO mapToOrderResponseDTO(Order order) {
 
         List<OrderDetailResponseDTO> itemDTOs = order.getOrderDetails().stream()
