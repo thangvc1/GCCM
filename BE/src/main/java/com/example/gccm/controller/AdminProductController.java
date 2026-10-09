@@ -85,7 +85,8 @@ public class AdminProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         return productRepository.findById(id).map(product -> {
-            product.setStatus(0);
+            // SỬA SỐ 0 THÀNH SỐ 2 (Ngừng kinh doanh)
+            product.setStatus(2);
             productRepository.save(product);
             return ResponseEntity.ok().build();
         }).orElse(ResponseEntity.notFound().build());
