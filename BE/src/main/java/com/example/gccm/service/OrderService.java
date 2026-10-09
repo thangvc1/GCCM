@@ -15,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -113,7 +115,12 @@ public class OrderService {
         notif.setIsRead(0);
         notif.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(notif);
-        messagingTemplate.convertAndSend("/topic/admin/notifications", notif);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messagingTemplate.convertAndSend("/topic/admin/notifications", notif);
+            }
+        });
 
         return order;
     }

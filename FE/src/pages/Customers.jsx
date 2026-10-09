@@ -1,24 +1,42 @@
-import { useEffect, useMemo, useState } from "react";
-import { Pagination, Select } from "antd";
+import { useEffect, useState } from "react";
+import { message, Pagination, Select } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { pageResult, storeApi } from "../api.js";
 import { useStore } from "../store/StoreContext.jsx";
-import { uid } from "../lib/format.js";
 import Modal from "../components/Modal.jsx";
 import { Button, Form, Input } from "antd";
 
-const empty = () => ({ id: "", name: "", phone: "", note: "", points: 0 });
+const empty = () => ({
+  id: "",
+  username: "",
+  password: "",
+  fullName: "",
+  phone: "",
+  address: "",
+});
+
+const customerFormValues = (customer) => ({
+  id: customer.id,
+  fullName: customer.fullName ?? customer.name ?? "",
+  username: customer.username ?? "",
+  phone: customer.phone ?? "",
+  address: customer.address ?? "",
+  status: Number(customer.status ?? 1),
+  password: "",
+});
 
 export default function Customers() {
-  const { upsertCustomer, deleteCustomer, orders } = useStore();
+  const { upsertCustomer, orders } = useStore();
   const [customers, setCustomers] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Tất cả");
+  const [statusFilter, setStatusFilter] = useState(0);
   const [form, setForm] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [statusLoadingId, setStatusLoadingId] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -35,12 +53,7 @@ export default function Customers() {
         page,
         size,
         keyword: debouncedQ || undefined,
-        status:
-          statusFilter === "Tất cả"
-            ? undefined
-            : statusFilter === "Hoạt động"
-              ? 1
-              : 0,
+        status: statusFilter,
       }),
     );
     setCustomers(result.items);
@@ -56,15 +69,44 @@ export default function Customers() {
       .filter((o) => o.customerId === id && o.status !== "đã hủy")
       .reduce((s, o) => s + o.total, 0);
 
-  const save = (values) => {
-    upsertCustomer({
-      ...form,
-      ...values,
-      id: form.id || uid("c"),
-      points: +form.points || 0,
-    });
-    loadCustomers();
-    setForm(null);
+  const save = async (values) => {
+    const customer = {
+      ...(form.id ? { id: form.id } : {}),
+      username: values.username,
+      fullName: values.fullName,
+      phone: values.phone,
+      address: values.address,
+      ...(form.id ? { status: Number(form.status) } : {}),
+      ...(values.password ? { password: values.password } : {}),
+    };
+    setSaving(true);
+    try {
+      await upsertCustomer(customer);
+      await loadCustomers();
+      setForm(null);
+      message.success(form.id ? "Đã cập nhật khách hàng" : "Đã thêm khách hàng");
+    } catch (error) {
+      message.error(error?.message || "Không thể lưu khách hàng");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateCustomerStatus = async (customer, status) => {
+    setStatusLoadingId(customer.id);
+    try {
+      await storeApi.updateCustomer(customer.id, { ...customer, status });
+      await loadCustomers();
+      message.success(
+        status === 1
+          ? "Đã chuyển khách hàng sang trạng thái hoạt động"
+          : "Đã ngừng hoạt động khách hàng",
+      );
+    } catch (error) {
+      message.error(error?.message || "Không thể cập nhật trạng thái khách hàng");
+    } finally {
+      setStatusLoadingId(null);
+    }
   };
 
   return (
@@ -86,7 +128,7 @@ export default function Customers() {
           prefix={<SearchOutlined style={{ color: "#999" }} />}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Tìm theo tên, SĐT, ghi chú..."
+          placeholder="Tìm theo tên, tài khoản, SĐT..."
           style={{ maxWidth: 300 }}
           allowClear
         />
@@ -95,9 +137,9 @@ export default function Customers() {
           onChange={setStatusFilter}
           style={{ width: 180 }}
           options={[
-            { value: "Tất cả", label: "Tất cả trạng thái" },
-            { value: "Hoạt động", label: "Hoạt động" },
-            { value: "Ngừng hoạt động", label: "Ngừng hoạt động" },
+            { value: 0, label: "Tất cả trạng thái" },
+            { value: 1, label: "Hoạt động" },
+            { value: 2, label: "Ngừng hoạt động" },
           ]}
         />
       </div>
@@ -105,35 +147,42 @@ export default function Customers() {
         <table>
           <thead>
             <tr>
-              <th>Tên</th>
+              <th>Tài khoản</th>
+              <th>Họ và tên</th>
               <th>Điện thoại</th>
-              <th>Ghi chú</th>
-              <th className="right">Điểm</th>
+              <th>Địa chỉ</th>
+              <th>Trạng thái</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {customers.map((c) => (
               <tr key={c.id}>
-                <td>{c.name}</td>
+                <td>{c.username || "—"}</td>
+                <td>{c.fullName || c.name || "—"}</td>
                 <td>{c.phone || "—"}</td>
-                <td>{c.note || "—"}</td>
-                <td className="right">{c.points || 0}</td>
+                <td>{c.address || "—"}</td>
+                <td>
+                  <Select
+                    value={Number(c.status)}
+                    style={{ width: 170 }}
+                    loading={statusLoadingId === c.id}
+                    disabled={statusLoadingId === c.id || c.id === "c0"}
+                    onChange={(status) => updateCustomerStatus(c, status)}
+                    options={[
+                      { value: 1, label: "Hoạt động" },
+                      { value: 2, label: "Ngừng hoạt động" },
+                    ]}
+                  />
+                </td>
                 <td>
                   <div className="actions">
-                    <button className="btn btn-sm" onClick={() => setForm(c)}>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => setForm(customerFormValues(c))}
+                    >
                       Sửa
                     </button>
-                    {c.id !== "c0" && (
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() =>
-                          confirm("Xóa khách?") && deleteCustomer(c.id)
-                        }
-                      >
-                        Xóa
-                      </button>
-                    )}
                   </div>
                 </td>
               </tr>
@@ -141,6 +190,7 @@ export default function Customers() {
           </tbody>
         </table>
         <Pagination
+          style={{ display: "flex", justifyContent: "flex-end" }}
           current={page}
           pageSize={size}
           total={total}
@@ -155,12 +205,30 @@ export default function Customers() {
       {form && (
         <Modal
           title={form.id ? "Sửa khách" : "Thêm khách"}
-          onClose={() => setForm(null)}
+          onClose={() => {
+            if (!saving) setForm(null);
+          }}
         >
           <Form layout="vertical" initialValues={form} onFinish={save}>
             <Form.Item
-              label="Tên"
-              name="name"
+              label="Tài khoản"
+              name="username"
+              rules={[{ required: true, message: "Vui lòng nhập tài khoản" }]}
+            >
+              <Input />
+            </Form.Item>
+            {!form.id && (
+              <Form.Item
+                label="Mật khẩu"
+                name="password"
+                rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+              >
+                <Input.Password />
+              </Form.Item>
+            )}
+            <Form.Item
+              label="Họ và tên"
+              name="fullName"
               rules={[{ required: true, message: "Vui lòng nhập tên" }]}
             >
               <Input />
@@ -168,8 +236,8 @@ export default function Customers() {
             <Form.Item label="Điện thoại" name="phone">
               <Input />
             </Form.Item>
-            <Form.Item label="Ghi chú" name="note">
-              <Input.TextArea rows={3} />
+            <Form.Item label="Địa chỉ" name="address">
+              <Input />
             </Form.Item>
             {form.id && (
               <p className="sub">
@@ -177,8 +245,10 @@ export default function Customers() {
               </p>
             )}
             <div className="actions" style={{ justifyContent: "flex-end" }}>
-              <Button onClick={() => setForm(null)}>Hủy</Button>
-              <Button type="primary" htmlType="submit">
+              <Button onClick={() => setForm(null)} disabled={saving}>
+                Hủy
+              </Button>
+              <Button type="primary" htmlType="submit" loading={saving}>
                 Lưu
               </Button>
             </div>

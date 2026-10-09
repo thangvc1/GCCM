@@ -47,7 +47,14 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setFullName(dto.getFullName());
         customer.setPhone(dto.getPhone());
         customer.setAddress(dto.getAddress());
-        customer.setStatus(dto.getStatus());
+
+        // SỬA Ở ĐÂY: Cập nhật Status cho Customer và ĐỒNG BỘ sang Account
+        if (dto.getStatus() != null) {
+            customer.setStatus(dto.getStatus());
+            if (customer.getAccount() != null) {
+                customer.getAccount().setStatus(dto.getStatus());
+            }
+        }
 
         return mapToDTO(customerRepository.save(customer));
     }

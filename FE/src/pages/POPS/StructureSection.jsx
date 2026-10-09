@@ -13,7 +13,7 @@ export default function StructureSection() {
             <div className="pops-layer-no">01</div>
             <div className="pops-layer-text">
               <h3>Lớp Thảm Poliester (PET)</h3>
-              <p>Lớp bê mặt bị chèn xốp mền hiệu quả cao</p>
+              <p>Lớp bê mặt bị chèn xốp mềm hiệu quả cao</p>
             </div>
           </div>
           <div className="pops-layer-item">

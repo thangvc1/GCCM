@@ -46,7 +46,7 @@ public class ProductRequestDTO {
     private String description;
 
     @NotNull(message = "Trạng thái không được để trống")
-    @Min(value = 0, message = "Trạng thái không hợp lệ (chỉ nhận 0 hoặc 1)")
-    @Max(value = 1, message = "Trạng thái không hợp lệ (chỉ nhận 0 hoặc 1)")
+    @Min(value = 1, message = "Trạng thái chỉ được là 1 (Đang KD) hoặc 2 (Ngừng KD)")
+    @Max(value = 2, message = "Trạng thái chỉ được là 1 (Đang KD) hoặc 2 (Ngừng KD)")
     private Integer status;
 }

@@ -13,8 +13,8 @@ import {
   Space,
 } from "antd";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { publicApi } from "../../api.js";
+import { Link, useNavigate } from "react-router-dom";
+import { authApi, publicApi } from "../../api.js";
 import { vnd } from "../../lib/format.js";
 import { useAuth } from "../../store/AuthContext.jsx";
 import AboutSection from "./AboutSection";
@@ -44,11 +44,15 @@ const productPrice = (product) =>
 
 export default function POS() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [selectedThickness, setSelectedThickness] = useState("10mm");
   const [area, setArea] = useState(100);
   const [orderModal, setOrderModal] = useState(null);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [form] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const orderArea = Form.useWatch("area", form) || orderModal?.area || 100;
   const orderPayMethod = Form.useWatch("payMethod", form) || "Chuyển khoản";
   const baseOrderPrice = orderModal
@@ -120,6 +124,28 @@ export default function POS() {
     }
   };
 
+  const handleChangePassword = async (values) => {
+    setIsChangingPassword(true);
+    try {
+      await authApi.changePassword({
+        oldPassword: values.oldPassword,
+        newPassword: values.newPassword,
+      });
+      message.success("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.");
+      setIsChangePasswordOpen(false);
+      passwordForm.resetFields();
+      logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      message.error(
+        error?.message ||
+          (typeof error === "string" ? error : "Không thể đổi mật khẩu"),
+      );
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   return (
     <Layout
       className="pops-page"
@@ -184,7 +210,7 @@ export default function POS() {
                 color: "#2b4836",
               }}
             >
-              0375 033 487
+              0964.361.520 - 0866.468.236{" "}
             </Button>
           </Space>
           {user ? (
@@ -218,6 +244,16 @@ export default function POS() {
                       </div>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    className="pops-user-change-password"
+                    onClick={() => {
+                      setIsChangePasswordOpen(true);
+                      passwordForm.resetFields();
+                    }}
+                  >
+                    Đổi mật khẩu
+                  </button>
                   <button
                     type="button"
                     className="pops-user-logout"
@@ -265,6 +301,61 @@ export default function POS() {
           )}
         </div>
       </header>
+      <Modal
+        title="Đổi mật khẩu"
+        open={isChangePasswordOpen}
+        onCancel={() => {
+          if (!isChangingPassword) setIsChangePasswordOpen(false);
+        }}
+        onOk={() => passwordForm.submit()}
+        confirmLoading={isChangingPassword}
+        okText="Đổi mật khẩu"
+        cancelText="Hủy"
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={handleChangePassword}
+        >
+          <Form.Item
+            label="Mật khẩu cũ"
+            name="oldPassword"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ" }]}
+          >
+            <Input.Password autoComplete="current-password" />
+          </Form.Item>
+          <Form.Item
+            label="Mật khẩu mới"
+            name="newPassword"
+            rules={[
+              { required: true, message: "Vui lòng nhập mật khẩu mới" },
+              { min: 6, message: "Mật khẩu mới phải có ít nhất 6 ký tự" },
+            ]}
+          >
+            <Input.Password autoComplete="new-password" />
+          </Form.Item>
+          <Form.Item
+            label="Xác nhận mật khẩu mới"
+            name="confirmPassword"
+            dependencies={["newPassword"]}
+            rules={[
+              { required: true, message: "Vui lòng xác nhận mật khẩu mới" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("newPassword") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error("Mật khẩu xác nhận không khớp"),
+                  );
+                },
+              }),
+            ]}
+          >
+            <Input.Password autoComplete="new-password" />
+          </Form.Item>
+        </Form>
+      </Modal>
       <HeroSection onOpenOrder={handleOpenOrder} />
       <div className="lp-marquee-bar lp-marquee-full-width">
         <div className="marquee-track">
@@ -439,10 +530,12 @@ export default function POS() {
                 textDecoration: "none",
               }}
             >
-              0345 412 152 - 0375 033 487
+              0345.412.152 - 0964.361.520 - 0866.468.236
             </a>{" "}
             • Facebook:{" "}
-            <span style={{ color: "#a3b2a7" }}>Thảm Bê Tông Việt Nam</span>
+            <span style={{ color: "#a3b2a7" }}>
+              Công ty TNHH Thảm Bê Tông Việt Nam - Thảm Xi Măng Việt Nam
+            </span>
           </div>
 
           {/* Cột 3: Bản quyền */}

@@ -1,9 +1,10 @@
-import { Typography } from "antd";
 import {
   EnvironmentOutlined,
+  FacebookOutlined,
   MailOutlined,
   PhoneOutlined,
 } from "@ant-design/icons";
+import { Typography } from "antd";
 
 const { Title, Text } = Typography;
 
@@ -39,7 +40,7 @@ export default function ContactSection() {
             <div className="pops-contact-content">
               <Text className="pops-contact-label">Điện Thoại / Zalo</Text>
               <Text className="pops-contact-value strong">
-                0345 412 152 - 0375 033 487
+                0345.412.152 - 0964.361.520 - 0866.468.236
               </Text>
               <Text className="pops-contact-sub">
                 Liên hệ Zalo ngay để được tư vấn
@@ -58,10 +59,36 @@ export default function ContactSection() {
               </Text>
             </div>
           </div>
+          <div className="pops-contact-item">
+            <div className="pops-contact-icon blue">
+              <FacebookOutlined />
+            </div>
+            <div className="pops-contact-content">
+              <Text className="pops-contact-label">Facebook</Text>
 
-          <button type="button" className="pops-contact-submit-btn">
-            GỌI NGAY ĐỂ TƯ VẤN MIỄN PHÍ
-          </button>
+              <Text className="pops-contact-value strong accent">
+                <a
+                  href="https://web.facebook.com/thambetongvietnam/?locale=vi_VN"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  Công ty TNHH Thảm Bê Tông Việt Nam
+                </a>
+              </Text>
+
+              <Text className="pops-contact-value strong accent">
+                <a
+                  href="https://www.facebook.com/profile.php?id=61594538284981"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  Thảm Xi Măng Việt Nam
+                </a>
+              </Text>
+            </div>
+          </div>
         </div>
       </div>
     </div>

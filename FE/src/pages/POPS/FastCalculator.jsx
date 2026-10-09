@@ -126,11 +126,6 @@ export default function FastCalculator({
           padding: "28px 32px",
           color: "#fff",
           boxShadow: "0 10px 30px rgba(15, 15, 15, 0.15)",
-          backgroundImage: productImage(currentItem)
-            ? `linear-gradient(90deg, rgb(167 185 239 / 98%), rgba(28, 59, 145, 0.9)), url("${productImage(currentItem)}")`
-            : undefined,
-          backgroundPosition: "center",
-          backgroundSize: "cover",
         }}
       >
         {/* Header */}
@@ -138,7 +133,7 @@ export default function FastCalculator({
           <span style={{ fontSize: 20 }}>🧮</span>
           <Title
             level={4}
-            style={{ color: "#000000", margin: 0, fontWeight: 700 }}
+            style={{ color: "#fff", margin: 0, fontWeight: 700 }}
           >
             Tính giá nhanh
           </Title>
@@ -157,7 +152,7 @@ export default function FastCalculator({
           <div style={{ flex: 1, minWidth: 280 }}>
             <Text
               style={{
-                color: "#121312",
+                color: "#fff",
                 fontSize: 12,
                 fontWeight: 600,
                 letterSpacing: 0.5,
@@ -185,7 +180,7 @@ export default function FastCalculator({
                       color:
                         selectedThickness === thicknessLabel(item)
                           ? "#fff"
-                          : "#8fa395",
+                          : "#fff",
                       border: "none",
                       borderRadius: 8,
                       fontWeight: 600,
@@ -210,7 +205,7 @@ export default function FastCalculator({
             >
               <Text
                 style={{
-                  color: "#000000",
+                  color: "#fff",
                   fontSize: 12,
                   fontWeight: 600,
                   letterSpacing: 0.5,
@@ -218,7 +213,7 @@ export default function FastCalculator({
               >
                 DIỆN TÍCH – TỐI THIỂU 100M²
               </Text>
-              <Text style={{ color: "#000000", fontWeight: 700, fontSize: 18 }}>
+              <Text style={{ color: "#fff", fontWeight: 700, fontSize: 18 }}>
                 {area} <span style={{ fontSize: 13 }}>m²</span>
               </Text>
             </Flex>
@@ -240,7 +235,7 @@ export default function FastCalculator({
         {/* Result Display Box */}
         <div
           style={{
-            backgroundColor: "#145a62",
+            backgroundColor: "rgba(11, 23, 41)",
             borderRadius: 12,
             padding: "20px 28px",
             marginBottom: 16,
@@ -259,9 +254,7 @@ export default function FastCalculator({
               </Text>
               <Text style={{ color: "#fff", fontSize: 22, fontWeight: 700 }}>
                 {vnd(unitPrice)}
-                <span
-                  style={{ fontSize: 13, fontWeight: 400, color: "#8fa395" }}
-                >
+                <span style={{ fontSize: 13, fontWeight: 400, color: "#fff" }}>
                   /m²
                 </span>
               </Text>
@@ -290,7 +283,7 @@ export default function FastCalculator({
         {/* Note */}
         <Text
           style={{
-            color: "#000000",
+            color: "#fff",
             fontSize: 12,
             textAlign: "center",
             display: "block",
@@ -302,7 +295,6 @@ export default function FastCalculator({
           <Button
             type="primary"
             size="large"
-            icon={<ArrowRightOutlined />}
             onClick={() => onOpenOrder(selectedThickness, area, currentItem)}
             style={{
               width: 220, // Đặt độ rộng vừa phải cho nút (có thể tăng/giảm tùy ý)

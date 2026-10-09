@@ -59,7 +59,7 @@ export const PRICING_TABLE = [
 export const ADVANTAGES = [
   {
     icon: "🧱",
-    title: "Độ bền 8–10 năm",
+    title: "Độ Bền 10–15 năm",
     desc: "Bê tông cuộn sản xuất theo tiêu chuẩn công nghiệp, chịu tải nén cao, không nứt vỡ theo thời gian.",
   },
   {

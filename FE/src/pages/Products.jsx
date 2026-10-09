@@ -41,7 +41,7 @@ export default function Products() {
   const [params] = useSearchParams();
   const [q, setQ] = useState(params.get("q") || "");
   const [debouncedQ, setDebouncedQ] = useState(params.get("q") || "");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -70,7 +70,7 @@ export default function Products() {
         page: currentPage,
         size: pageSize,
         keyword: debouncedQ || undefined,
-        status: statusFilter === "ALL" ? undefined : Number(statusFilter),
+        status: statusFilter,
       }),
     );
     setProducts(result.items);
@@ -178,7 +178,7 @@ export default function Products() {
       okText: "Ngừng kinh doanh",
       cancelText: "Hủy",
       okButtonProps: { danger: true },
-      onOk: () => handleStatusChange(record.id, 0),
+      onOk: () => handleStatusChange(record.id, 2),
     });
   };
 
@@ -290,7 +290,7 @@ export default function Products() {
           onChange={(value) => handleStatusSelect(record, value)}
           options={[
             { value: 1, label: "Kinh doanh" },
-            { value: 0, label: "Ngừng kinh doanh" },
+            { value: 2, label: "Ngừng kinh doanh" },
           ]}
         />
       ),
@@ -350,9 +350,9 @@ export default function Products() {
           onChange={setStatusFilter}
           style={{ width: 180 }}
           options={[
-            { value: "ALL", label: "Tất cả trạng thái" },
-            { value: "1", label: "Đang kinh doanh" },
-            { value: "0", label: "Ngừng kinh doanh" },
+            { value: 0, label: "Tất cả trạng thái" },
+            { value: 1, label: "Đang kinh doanh" },
+            { value: 2, label: "Ngừng kinh doanh" },
           ]}
         />
       </div>
@@ -544,13 +544,13 @@ export default function Products() {
               rules={[
                 { required: true, message: "Trạng thái không được để trống" },
                 { type: "number", min: 0, message: "Trạng thái không hợp lệ" },
-                { type: "number", max: 1, message: "Trạng thái không hợp lệ" },
+                { type: "number", max: 2, message: "Trạng thái không hợp lệ" },
               ]}
             >
               <Select
                 options={[
                   { value: 1, label: "Đang kinh doanh" },
-                  { value: 0, label: "Ngừng kinh doanh" },
+                  { value: 2, label: "Ngừng kinh doanh" },
                 ]}
               />
             </Form.Item>

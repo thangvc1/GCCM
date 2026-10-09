@@ -4,7 +4,6 @@ import {
   Tag,
   Button,
   Input,
-  Select,
   Space,
   Popconfirm,
   Modal,
@@ -18,6 +17,30 @@ import {
 import { useStore } from "../store/StoreContext.jsx";
 import { pageResult, storeApi } from "../api.js";
 import { fmtDate, vnd } from "../lib/format.js";
+
+const formatDateTimeLocal = (date) => {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const getDefaultDateRange = () => {
+  const end = new Date();
+  const start = new Date(end);
+  const day = start.getDate();
+  start.setDate(1);
+  start.setMonth(start.getMonth() - 1);
+  const lastDayOfPreviousMonth = new Date(
+    start.getFullYear(),
+    start.getMonth() + 1,
+    0,
+  ).getDate();
+  start.setDate(Math.min(day, lastDayOfPreviousMonth));
+
+  return {
+    startDate: formatDateTimeLocal(start),
+    endDate: formatDateTimeLocal(end),
+  };
+};
 
 const toOrderFromNotification = (notification) => {
   const payload =
@@ -75,7 +98,7 @@ export default function Orders() {
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  const [status, setStatus] = useState("Tất cả");
+  const [{ startDate, endDate }, setDateRange] = useState(getDefaultDateRange);
   const [viewingOrder, setViewingOrder] = useState(null);
 
   useEffect(() => {
@@ -93,7 +116,8 @@ export default function Orders() {
         page,
         size,
         keyword: debouncedQ || undefined,
-        status: status === "Tất cả" ? undefined : status,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       }),
     );
     setNotifications(result.items);
@@ -102,7 +126,7 @@ export default function Orders() {
 
   useEffect(() => {
     loadOrders();
-  }, [page, size, debouncedQ, status]);
+  }, [page, size, debouncedQ, startDate, endDate]);
 
   const orderList = useMemo(
     () =>
@@ -124,12 +148,15 @@ export default function Orders() {
       title: "Mã đơn",
       dataIndex: "code",
       key: "code",
+      width: 110,
       render: (code) => <strong>{code}</strong>,
     },
     {
       title: "Thời gian",
       dataIndex: "at",
       key: "at",
+      responsive: ["sm"],
+      width: 160,
       render: (time) => fmtDate(time),
       sorter: (a, b) => new Date(a.at) - new Date(b.at),
     },
@@ -137,23 +164,30 @@ export default function Orders() {
       title: "Khách hàng",
       dataIndex: "customerName",
       key: "customerName",
+      width: 150,
     },
     {
       title: "Người nhận",
       dataIndex: "receiverName",
       key: "receiverName",
+      responsive: ["sm"],
+      width: 130,
       render: (name) => name || "-",
     },
     {
       title: "Số điện thoại",
       dataIndex: "receiverPhone",
       key: "receiverPhone",
+      responsive: ["sm"],
+      width: 140,
       render: (phone) => phone || "-",
     },
     {
       title: "Hình thức",
       dataIndex: "payMethod",
       key: "payMethod",
+      responsive: ["sm"],
+      width: 140,
       render: (method) => <Tag color="geekblue">{method}</Tag>,
     },
     // {
@@ -177,6 +211,7 @@ export default function Orders() {
       dataIndex: "total",
       key: "total",
       align: "right",
+      width: 130,
       render: (total) => <strong>{vnd(total)}</strong>,
       sorter: (a, b) => a.total - b.total,
     },
@@ -184,7 +219,7 @@ export default function Orders() {
       title: "Hành động",
       key: "actions",
       align: "center",
-      width: 160,
+      width: 100,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -192,7 +227,7 @@ export default function Orders() {
             icon={<EyeOutlined />}
             onClick={() => setViewingOrder(record)}
           >
-            Chi tiết
+            <span className="order-action-label">Chi tiết</span>
           </Button>
           {/* {record.status !== "đã hủy" && (
             <Popconfirm
@@ -214,7 +249,7 @@ export default function Orders() {
   ];
 
   return (
-    <div>
+    <div className="orders-page">
       <div className="page-head" style={{ marginBottom: 16 }}>
         <div>
           <h1>Đơn hàng</h1>
@@ -223,7 +258,7 @@ export default function Orders() {
       </div>
 
       <div
-        className="filters"
+        className="filters orders-filters"
         style={{ marginBottom: 16, display: "flex", gap: 12 }}
       >
         <Input
@@ -234,20 +269,39 @@ export default function Orders() {
           style={{ maxWidth: 300 }}
           allowClear
         />
-        <Select
-          value={status}
-          onChange={setStatus}
-          style={{ width: 160 }}
-          options={[
-            { value: "Tất cả", label: "Tất cả trạng thái" },
-            { value: "hoàn tất", label: "Hoàn tất" },
-            { value: "đã hủy", label: "Đã hủy" },
-          ]}
+        <Input
+          aria-label="Từ ngày"
+          type="datetime-local"
+          value={startDate}
+          style={{ width: 220, flex: "0 0 220px" }}
+          onClick={(event) => event.currentTarget.showPicker?.()}
+          onChange={(event) => {
+            setDateRange((range) => ({
+              ...range,
+              startDate: event.target.value,
+            }));
+            setPage(1);
+          }}
+        />
+        <Input
+          aria-label="Đến ngày"
+          type="datetime-local"
+          value={endDate}
+          style={{ width: 220, flex: "0 0 220px" }}
+          onClick={(event) => event.currentTarget.showPicker?.()}
+          onChange={(event) => {
+            setDateRange((range) => ({
+              ...range,
+              endDate: event.target.value,
+            }));
+            setPage(1);
+          }}
         />
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="card orders-table-card" style={{ padding: 0 }}>
         <Table
+          className="orders-table"
           columns={columns}
           dataSource={orderList}
           rowKey="id"

@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { storeApi } from "../api.js";
+import { pageResult, storeApi } from "../api.js";
 
-const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:8080/ws";
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) return import.meta.env.VITE_SOCKET_URL;
+
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!apiBaseUrl) return new URL("/ws", window.location.origin).toString();
+
+  const apiUrl = new URL(apiBaseUrl, window.location.origin);
+  apiUrl.pathname = apiUrl.pathname.replace(/\/api\/v\d+\/?$/, "/ws");
+  apiUrl.search = "";
+  apiUrl.hash = "";
+  return apiUrl.toString().replace(/\/$/, "");
+};
 
 const normalizeNotification = (data) => {
   const payload = data?.payload ?? data?.notification ?? data;
@@ -64,9 +74,7 @@ export function useSocket(onNotification) {
   const loadNotifications = useCallback(async () => {
     try {
       const response = await storeApi.getNotifications({ page: 1, size: 100 });
-      const items = Array.isArray(response)
-        ? response
-        : response?.items || response?.results || [];
+      const { items } = pageResult(response);
       const nextNotifications = items.map(normalizeNotification);
       setNotifications((prev) => {
         const prevMap = new Map(prev.map((n) => [String(n.id), n]));
@@ -79,14 +87,14 @@ export function useSocket(onNotification) {
         );
       });
       return nextNotifications;
-    } catch {
-      setNotifications([]);
+    } catch (error) {
+      console.error("Không thể tải thông báo từ máy chủ:", error);
       return [];
     }
   }, []);
 
   const addNotification = useCallback(
-    async (data) => {
+    (data) => {
       const item = normalizeNotification(data);
       setNotifications((prev) => {
         const map = new Map(prev.map((n) => [String(n.id), n]));
@@ -97,53 +105,37 @@ export function useSocket(onNotification) {
       });
 
       onNotificationRef.current?.(item);
-
-      // Chỉ refetch sau 500-800ms để tránh race-condition với backend vừa lưu xong.
-      window.setTimeout(() => {
-        loadNotifications();
-      }, 800);
     },
-    [loadNotifications],
+    [],
   );
 
   useEffect(() => {
     loadNotifications();
-
+    let hasConnected = false;
     const token = localStorage.getItem("access_token");
     const client = new Client({
-      webSocketFactory: () => new SockJS(SOCKET_URL),
+      webSocketFactory: () => new SockJS(getSocketUrl()),
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       reconnectDelay: 5000,
       debug: () => {},
       onConnect: () => {
         setIsConnected(true);
         setIsFallback(false);
-        loadNotifications();
+        if (hasConnected) loadNotifications();
+        hasConnected = true;
 
-        const subscriptions = [
-          "/topic/admin/notifications",
-          "/user/queue/notifications",
-        ];
-
-        subscriptions.forEach((destination) => {
+        client.subscribe("/topic/admin/notifications", (frame) => {
           try {
-            client.subscribe(destination, (frame) => {
-              try {
-                const message = JSON.parse(frame.body);
-                addNotification(message);
-              } catch {
-                addNotification({
-                  id: Date.now(),
-                  title: "Thông báo mới",
-                  message: frame.body,
-                  type: "info",
-                  isRead: false,
-                  createdAt: new Date().toISOString(),
-                });
-              }
-            });
+            addNotification(JSON.parse(frame.body));
           } catch {
-            // no-op
+            addNotification({
+              id: Date.now(),
+              title: "Thông báo mới",
+              message: frame.body,
+              type: "info",
+              isRead: false,
+              createdAt: new Date().toISOString(),
+            });
           }
         });
       },
@@ -170,16 +162,21 @@ export function useSocket(onNotification) {
 
   const markAsRead = useCallback(async (id) => {
     if (!id) return;
-    try {
-      await storeApi.markNotificationRead(id);
-      setNotifications((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, isRead: true, read: true } : item,
-        ),
-      );
-    } catch {
-      // no-op
-    }
+    await storeApi.markNotificationRead(id);
+    setNotifications((prev) =>
+      prev.map((item) =>
+        String(item.id) === String(id)
+          ? { ...item, isRead: true, read: true }
+          : item,
+      ),
+    );
+  }, []);
+
+  const markAllAsRead = useCallback(async () => {
+    await storeApi.markAllNotificationsRead();
+    setNotifications((prev) =>
+      prev.map((item) => ({ ...item, isRead: true, read: true })),
+    );
   }, []);
 
   const clearAll = () => setNotifications([]);
@@ -190,6 +187,7 @@ export function useSocket(onNotification) {
     notifications,
     loadNotifications,
     markAsRead,
+    markAllAsRead,
     clearAll,
   };
 }

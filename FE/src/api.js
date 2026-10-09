@@ -36,7 +36,11 @@ export const pageResult = (value) => {
   const payload = Array.isArray(value?.data) ? value : (value?.data ?? value);
   const items = Array.isArray(payload)
     ? payload
-    : payload?.data || payload?.items || payload?.results || [];
+    : payload?.content ||
+      payload?.data ||
+      payload?.items ||
+      payload?.results ||
+      [];
   const total = Number(
     payload?.totalElements ?? payload?.total ?? payload?.count ?? items.length,
   );
@@ -48,6 +52,7 @@ export const authApi = {
   login: (credentials) => api.post("/auth/login", credentials),
   register: (userData) => api.post("/auth/register", userData),
   getMe: () => api.get("/auth/me"),
+  changePassword: (passwords) => api.post("/auth/change-password", passwords),
 };
 
 export const storeApi = {
@@ -85,7 +90,8 @@ export const storeApi = {
   cancelOrder: (id) => api.patch(`/admin/orders/${id}/cancel`),
   getNotifications: (params = {}) =>
     api.get("/admin/notifications", { params: pageParams(params) }),
-  markNotificationRead: (id) => api.patch(`/admin/notifications/${id}/read`),
+  markNotificationRead: (id) => api.put(`/admin/notifications/${id}/read`),
+  markAllNotificationsRead: () => api.put("/admin/notifications/read-all"),
   deleteNotification: (id) => api.delete(`/admin/notifications/${id}`),
   getStockLogs: (params) =>
     api.get("/admin/stock/logs", { params: pageParams(params) }),

@@ -1,7 +1,7 @@
 const advantages = [
   {
     image: "/img/anh2.jpg",
-    title: "Bền 8–10 năm",
+    title: "Bền 10–15 năm",
     description:
       "Bê tông cuộn sản xuất đạt tiêu chuẩn công nghệ, chịu lực nén cao, không nứt vỡ theo thời gian.",
   },
@@ -13,9 +13,9 @@ const advantages = [
   },
   {
     image: "/img/anh12.jpg",
-    title: "Cách âm, cách nhiệt",
+    title: "Thi công nhanh gọn",
     description:
-      "Lớp bê tông dày giúp giảm tiếng ồn và cách nhiệt hiệu quả cho không gian phía dưới.",
+      "Rút ngắn 80% thời gian thi công so với bê tông truyền thống, đưa công trình vào sử dụng ngay.",
   },
   {
     image: "/img/anh5.jpg",

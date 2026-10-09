@@ -17,10 +17,6 @@ export default function SpecsSection() {
             </thead>
             <tbody>
               <tr>
-                <td>4mm</td>
-                <td>4 kg/m²</td>
-              </tr>
-              <tr>
                 <td>6mm</td>
                 <td>6 kg/m²</td>
               </tr>
