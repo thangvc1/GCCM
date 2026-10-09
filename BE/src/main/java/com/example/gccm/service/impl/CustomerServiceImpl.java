@@ -57,7 +57,15 @@ public class CustomerServiceImpl implements CustomerService {
     public void toggleCustomerStatus(Long id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
-        customer.setStatus(customer.getStatus() == 1 ? 0 : 1);
+
+        // Đổi lật trạng thái giữa 1 (Hoạt động) và 2 (Khóa) thay vì 0
+        customer.setStatus(customer.getStatus() == 1 ? 2 : 1);
+
+        // Đồng bộ trạng thái khóa sang cả bảng Account để chặn đăng nhập
+        if (customer.getAccount() != null) {
+            customer.getAccount().setStatus(customer.getStatus());
+        }
+
         customerRepository.save(customer);
     }
 

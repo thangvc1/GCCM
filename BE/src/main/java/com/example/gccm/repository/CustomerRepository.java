@@ -20,6 +20,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             " LOWER(c.phone) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             " LOWER(c.address) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             " LOWER(c.account.username) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-            "(:status IS NULL OR c.status = :status)")
+            "(:status IS NULL OR :status = 0 OR c.status = :status)") // <-- Sửa dòng này
     List<Customer> searchCustomers(@Param("keyword") String keyword, @Param("status") Integer status);
 }
