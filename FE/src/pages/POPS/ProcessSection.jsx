@@ -28,7 +28,7 @@ export default function ProcessSection() {
         <div className="pops-process-card">
           <div className="pops-process-badge">03</div>
           <img src="/img/anh9.jpg" alt="Cố định và chồng lấp" />
-          <h3>Cố Định &amp; Chống Lấp</h3>
+          <h3>Cố Định &amp; Chồng lớp</h3>
           <p>
             Chồng các mép bề mặt từ 5-10cm cố định bằng 2 ghim 2 đầu và méo
             chồng chắc chắn.
